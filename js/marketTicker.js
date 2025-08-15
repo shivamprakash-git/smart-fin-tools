@@ -7,6 +7,12 @@
 
   let animationId = null;
   let paused = false;
+  let currentMarquee = null; // { track, clone, contentWidth, wrapper }
+
+  // Simple debounce
+  function debounce(fn, wait=200){
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+  }
 
   function qs(sel, root=document){ return root.querySelector(sel); }
 
@@ -111,6 +117,8 @@
 
     wrapper.appendChild(clone);
 
+    currentMarquee = { track, clone, contentWidth, wrapper };
+
     let x = 0;
     function step(ts){
       if (!step.last) step.last = ts;
@@ -120,8 +128,8 @@
         x -= SPEED_PX_PER_S * dt;
         const total = contentWidth;
         if (Math.abs(x) >= total) x += total; // wrap
-        track.style.transform = `translateX(${x}px)`;
-        clone.style.transform = `translateX(${x + contentWidth}px)`;
+        track.style.transform = `translate3d(${x}px,0,0)`;
+        clone.style.transform = `translate3d(${x + contentWidth}px,0,0)`;
       }
       animationId = requestAnimationFrame(step);
     }
@@ -134,56 +142,9 @@
   }
 
   function setPauseHandlers(el){
-    // Pause on hover for readability, but keep selection/copy consistent.
-    let hovering = false;
-    let selecting = false;
-    const toggleClones = (show) => {
-      const viewport = qs('#market-ticker-viewport');
-      if (!viewport) return;
-      viewport.querySelectorAll('[data-ticker-clone="1"]').forEach(n => {
-        n.style.visibility = show ? 'visible' : 'hidden';
-      });
-    };
-
-    el.addEventListener('mouseenter', () => {
-      hovering = true;
-      paused = true;
-    });
-
-    el.addEventListener('mouseleave', () => {
-      hovering = false;
-      if (!selecting) paused = false;
-    });
-
-    el.addEventListener('mousedown', () => {
-      selecting = true;
-      paused = true;
-      toggleClones(false); // hide clone to avoid duplicate selection
-    });
-
-    window.addEventListener('mouseup', () => {
-      selecting = false;
-      if (!hovering) paused = false;
-      // If selection cleared, restore clones
-      const sel = document.getSelection();
-      const hasSel = sel && sel.rangeCount > 0 && el.contains(sel.anchorNode);
-      if (!hasSel) toggleClones(true);
-    });
-
-    // If selection is active within the element, keep paused even if minor pointer events occur
-    document.addEventListener('selectionchange', () => {
-      const sel = document.getSelection();
-      const hasSel = sel && sel.rangeCount > 0 && el.contains(sel.anchorNode);
-      if (hasSel) {
-        selecting = true;
-        paused = true;
-        toggleClones(false);
-      } else if (!hovering) {
-        selecting = false;
-        paused = false;
-        toggleClones(true);
-      }
-    });
+    // Only pause on hover; no selection/copy handling
+    el.addEventListener('mouseenter', () => { paused = true; });
+    el.addEventListener('mouseleave', () => { paused = false; });
   }
 
   async function render() {
@@ -220,9 +181,7 @@
     // Remove previous clone if any
     const wrapper = track.parentElement;
     // Remove previous clones if any
-  [...wrapper.querySelectorAll('[data-ticker-clone="1"]')].forEach(n => n.remove());
-  // Ensure wrapper also allows text selection to keep copy consistent
-  wrapper.style.userSelect = 'text';
+    [...wrapper.querySelectorAll('[data-ticker-clone="1"]')].forEach(n => n.remove());
     track.style.transform = 'translateX(0)';
 
     // Defer to allow layout
@@ -239,5 +198,9 @@
     if (viewport) setPauseHandlers(viewport);
     render();
     startAutoRefresh();
+    // Rebuild marquee on resize for consistent dimensions
+    window.addEventListener('resize', debounce(() => {
+      render();
+    }, 200));
   });
 })();
