@@ -135,6 +135,31 @@ function formatCurrency(amount) {
     });
 }
 
+// For extremely large values, render an infinity symbol to keep layout stable
+const MAX_DISPLAY_VALUE = 1e21; // much higher threshold; rely on compact formatting first
+function formatCurrencyOrInfinity(amount) {
+    if (!isFinite(amount) || Math.abs(amount) > MAX_DISPLAY_VALUE) {
+        return '∞';
+    }
+    const abs = Math.abs(amount);
+    // Use compact form for large values to keep UI responsive
+    if (abs >= 1e7) { // 1 Crore threshold
+        try {
+            const compact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFractionDigits: 2 }).format(amount);
+            return '₹' + compact;
+        } catch (e) {
+            // Fallback to Indian units: Lakh (1e5), Crore (1e7)
+            let val = amount;
+            let unit = '';
+            if (abs >= 1e7) { val = amount / 1e7; unit = 'Cr'; }
+            else if (abs >= 1e5) { val = amount / 1e5; unit = 'L'; }
+            const fixed = Math.abs(val) >= 100 ? val.toFixed(0) : Math.abs(val) >= 10 ? val.toFixed(1) : val.toFixed(2);
+            return '₹' + Number(fixed).toString() + unit;
+        }
+    }
+    return formatCurrency(amount);
+}
+
 // Validate number inputs
 function validateNumberInput(input, min, max) {
     let value = parseFloat(input.value);
@@ -145,6 +170,81 @@ function validateNumberInput(input, min, max) {
     return value;
 }
 
+// Clamp helper for live typing without forcing when empty
+function clampInputIfOutOfRange(input, min, max) {
+    const raw = input.value;
+    const v = parseFloat(raw);
+    if (isNaN(v)) return null; // allow empty/partial input while typing
+    let clamped = v;
+    if (v < min) clamped = min;
+    if (v > max) clamped = max;
+    if (clamped !== v) input.value = clamped;
+    return clamped;
+}
+
+// Block non-numeric characters (optional single decimal point)
+function addNumericGuards(input, allowDecimal = false) {
+    input.addEventListener('keydown', (e) => {
+        const ctrlCombo = (e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z'].includes(e.key.toLowerCase());
+        const navKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (ctrlCombo || navKeys.includes(e.key)) return;
+        // Normalize decimal key across browsers: '.', ',', 'Decimal', 'Period'
+        const isDecimalKey = e.key === '.' || e.key === ',' || e.key === 'Decimal' || e.key === 'Period';
+        if (isDecimalKey) {
+            if (!allowDecimal) { e.preventDefault(); return; }
+            // Firefox doesn't support selectionStart/End on type=number. Normalize.
+            let { selectionStart: s, selectionEnd: epos, value } = input;
+            if (s == null || epos == null) { s = value.length; epos = value.length; }
+            // Disallow '.' as the first character and disallow multiple dots overall
+            const alreadyHasDotOutsideSelection = value.includes('.') && !(value.indexOf('.') >= s && value.indexOf('.') < epos);
+            if (s === 0 || alreadyHasDotOutsideSelection) { e.preventDefault(); return; }
+            // If comma was pressed, insert a dot instead to keep consistent parsing
+            if (e.key === ',') {
+                e.preventDefault();
+                const next = value.slice(0, s) + '.' + value.slice(epos);
+                input.value = next;
+            }
+            return;
+        }
+        if (e.key >= '0' && e.key <= '9') {
+            if (allowDecimal) {
+                let { selectionStart: s, selectionEnd: epos, value } = input;
+                if (s == null || epos == null) { s = value.length; epos = value.length; }
+                const next = value.slice(0, s) + e.key + value.slice(epos);
+                // If there's a decimal point, ensure up to 3 digits after it
+                const dotIndex = next.indexOf('.');
+                if (dotIndex !== -1) {
+                    const decimals = next.slice(dotIndex + 1);
+                    if (decimals.length > 3) { e.preventDefault(); return; }
+                }
+            }
+            return;
+        }
+        // Block everything else (including e/E/+/-)
+        e.preventDefault();
+    });
+    input.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        let { selectionStart: s, selectionEnd: epos, value } = input;
+        if (s == null || epos == null) { s = value.length; epos = value.length; }
+        const sanitized = allowDecimal ? text.replace(',', '.') : text.replace(/\D+/g, '');
+        const next = value.slice(0, s) + sanitized + value.slice(epos);
+        const regexStrict = allowDecimal ? /^[0-9]+(\.[0-9]{1,3})?$/ : /^[0-9]+$/;
+        if (!regexStrict.test(next)) {
+            e.preventDefault();
+            return;
+        }
+    });
+}
+
+// Prevent mouse wheel from changing number inputs
+function addWheelGuard(input) {
+    // When focused, block wheel increments
+    input.addEventListener('wheel', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+}
+
 // SIP Calculator
 function setupSIPCalculator() {
     const sipAmount = document.getElementById('sip-amount');
@@ -153,10 +253,16 @@ function setupSIPCalculator() {
     const sipPeriodRange = document.getElementById('sip-period-range');
     const sipRate = document.getElementById('sip-rate');
     const sipRateRange = document.getElementById('sip-rate-range');
+    // Prevent letters; allow decimals except for years, block wheel
+    addNumericGuards(sipAmount, true);
+    addNumericGuards(sipPeriod, false); // years: integers only
+    addNumericGuards(sipRate, true);
+    [sipAmount, sipPeriod, sipRate].forEach(addWheelGuard);
     
-    // Link inputs and range sliders
+    // Link inputs and range sliders (live clamp to keep calc consistent)
     sipAmount.addEventListener('input', function() {
-        sipAmountRange.value = this.value;
+        clampInputIfOutOfRange(sipAmount, 1, 10000000);
+        sipAmountRange.value = sipAmount.value;
         calculateSIP();
     });
     
@@ -166,7 +272,8 @@ function setupSIPCalculator() {
     });
     
     sipPeriod.addEventListener('input', function() {
-        sipPeriodRange.value = this.value;
+        clampInputIfOutOfRange(sipPeriod, 1, 50);
+        sipPeriodRange.value = sipPeriod.value;
         calculateSIP();
     });
     
@@ -176,7 +283,8 @@ function setupSIPCalculator() {
     });
     
     sipRate.addEventListener('input', function() {
-        sipRateRange.value = this.value;
+        clampInputIfOutOfRange(sipRate, 1, 100);
+        sipRateRange.value = sipRate.value;
         calculateSIP();
     });
     
@@ -186,9 +294,9 @@ function setupSIPCalculator() {
     });
     
     // Validate inputs
-    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, 100, 1000000));
-    sipPeriod.addEventListener('blur', () => validateNumberInput(sipPeriod, 1, 40));
-    sipRate.addEventListener('blur', () => validateNumberInput(sipRate, 1, 30));
+    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, 1, 10000000));
+    sipPeriod.addEventListener('blur', () => validateNumberInput(sipPeriod, 1, 50));
+    sipRate.addEventListener('blur', () => validateNumberInput(sipRate, 1, 100));
     
     function calculateSIP() {
         const amount = parseFloat(sipAmount.value) || 0;
@@ -203,9 +311,9 @@ function setupSIPCalculator() {
         const invested = amount * months;
         const returns = futureValue - invested;
         
-        document.getElementById('sip-invested').textContent = formatCurrency(invested);
-        document.getElementById('sip-returns').textContent = formatCurrency(returns);
-        document.getElementById('sip-total').textContent = formatCurrency(futureValue);
+        document.getElementById('sip-invested').textContent = formatCurrencyOrInfinity(invested);
+        document.getElementById('sip-returns').textContent = formatCurrencyOrInfinity(returns);
+        document.getElementById('sip-total').textContent = formatCurrencyOrInfinity(futureValue);
     }
     
     // Initial calculation
@@ -220,10 +328,16 @@ function setupLumpsumCalculator() {
     const lumpsumPeriodRange = document.getElementById('lumpsum-period-range');
     const lumpsumRate = document.getElementById('lumpsum-rate');
     const lumpsumRateRange = document.getElementById('lumpsum-rate-range');
+    // Prevent letters; allow decimals except for years, block wheel
+    addNumericGuards(lumpsumAmount, true);
+    addNumericGuards(lumpsumPeriod, false); // years: integers only
+    addNumericGuards(lumpsumRate, true);
+    [lumpsumAmount, lumpsumPeriod, lumpsumRate].forEach(addWheelGuard);
     
-    // Link inputs and range sliders
+    // Link inputs and range sliders (live clamp)
     lumpsumAmount.addEventListener('input', function() {
-        lumpsumAmountRange.value = this.value;
+        clampInputIfOutOfRange(lumpsumAmount, 1, 100000000);
+        lumpsumAmountRange.value = lumpsumAmount.value;
         calculateLumpsum();
     });
     
@@ -233,7 +347,8 @@ function setupLumpsumCalculator() {
     });
     
     lumpsumPeriod.addEventListener('input', function() {
-        lumpsumPeriodRange.value = this.value;
+        clampInputIfOutOfRange(lumpsumPeriod, 1, 50);
+        lumpsumPeriodRange.value = lumpsumPeriod.value;
         calculateLumpsum();
     });
     
@@ -243,7 +358,8 @@ function setupLumpsumCalculator() {
     });
     
     lumpsumRate.addEventListener('input', function() {
-        lumpsumRateRange.value = this.value;
+        clampInputIfOutOfRange(lumpsumRate, 1, 100);
+        lumpsumRateRange.value = lumpsumRate.value;
         calculateLumpsum();
     });
     
@@ -252,10 +368,10 @@ function setupLumpsumCalculator() {
         calculateLumpsum();
     });
     
-    // Validate inputs
-    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, 1000, 10000000));
-    lumpsumPeriod.addEventListener('blur', () => validateNumberInput(lumpsumPeriod, 1, 40));
-    lumpsumRate.addEventListener('blur', () => validateNumberInput(lumpsumRate, 1, 30));
+    // Final clamp on blur (live clamp is already applied in input handlers above)
+    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, 1, 100000000));
+    lumpsumPeriod.addEventListener('blur', () => validateNumberInput(lumpsumPeriod, 1, 50));
+    lumpsumRate.addEventListener('blur', () => validateNumberInput(lumpsumRate, 1, 100));
     
     function calculateLumpsum() {
         const amount = parseFloat(lumpsumAmount.value) || 0;
@@ -267,9 +383,9 @@ function setupLumpsumCalculator() {
         const futureValue = amount * Math.pow(1 + rate/100, period);
         const returns = futureValue - amount;
         
-        document.getElementById('lumpsum-invested').textContent = formatCurrency(amount);
-        document.getElementById('lumpsum-returns').textContent = formatCurrency(returns);
-        document.getElementById('lumpsum-total').textContent = formatCurrency(futureValue);
+        document.getElementById('lumpsum-invested').textContent = formatCurrencyOrInfinity(amount);
+        document.getElementById('lumpsum-returns').textContent = formatCurrencyOrInfinity(returns);
+        document.getElementById('lumpsum-total').textContent = formatCurrencyOrInfinity(futureValue);
     }
     
     // Initial calculation
@@ -283,6 +399,10 @@ function setupGSTCalculator() {
     const gstRateBtns = document.querySelectorAll('.gst-rate-btn');
     const gstAddBtn = document.getElementById('gst-add');
     const gstRemoveBtn = document.getElementById('gst-remove');
+    // Prevent letters + allow decimals, block wheel
+    addNumericGuards(gstAmount, true);
+    addNumericGuards(gstRateInput, true);
+    [gstAmount, gstRateInput].forEach(addWheelGuard);
     
     // GST Rate buttons (Tailwind class toggling)
     gstRateBtns.forEach(btn => {
@@ -324,8 +444,17 @@ function setupGSTCalculator() {
         calculateGST();
     });
     
-    // Input validation
-    gstAmount.addEventListener('blur', () => validateNumberInput(gstAmount, 1, 10000000));
+    // Live input + validation for consistent calc
+    gstAmount.addEventListener('input', () => {
+        clampInputIfOutOfRange(gstAmount, 1, 100000000);
+        calculateGST();
+    });
+    gstRateInput.addEventListener('input', () => {
+        clampInputIfOutOfRange(gstRateInput, 0, 100);
+        calculateGST();
+    });
+    // Final clamp on blur
+    gstAmount.addEventListener('blur', () => validateNumberInput(gstAmount, 1, 100000000));
     gstRateInput.addEventListener('blur', () => validateNumberInput(gstRateInput, 0, 100));
     
     function calculateGST() {
@@ -345,9 +474,9 @@ function setupGSTCalculator() {
             tax = net - original;
         }
         
-        document.getElementById('gst-original').textContent = formatCurrency(original);
-        document.getElementById('gst-tax').textContent = formatCurrency(tax);
-        document.getElementById('gst-net').textContent = formatCurrency(net);
+        document.getElementById('gst-original').textContent = formatCurrencyOrInfinity(original);
+        document.getElementById('gst-tax').textContent = formatCurrencyOrInfinity(tax);
+        document.getElementById('gst-net').textContent = formatCurrencyOrInfinity(net);
     }
     
     // Initial calculation
@@ -362,10 +491,16 @@ function setupEMICalculator() {
     const emiRateRange = document.getElementById('emi-rate-range');
     const emiTenure = document.getElementById('emi-tenure');
     const emiTenureRange = document.getElementById('emi-tenure-range');
+    // Prevent letters; allow decimals except for years, block wheel
+    addNumericGuards(emiAmount, true);
+    addNumericGuards(emiRate, true);
+    addNumericGuards(emiTenure, false); // years: integers only
+    [emiAmount, emiRate, emiTenure].forEach(addWheelGuard);
     
-    // Link inputs and range sliders
+    // Link inputs and range sliders (live clamp)
     emiAmount.addEventListener('input', function() {
-        emiAmountRange.value = this.value;
+        clampInputIfOutOfRange(emiAmount, 1000, 100000000);
+        emiAmountRange.value = emiAmount.value;
         calculateEMI();
     });
     
@@ -375,7 +510,8 @@ function setupEMICalculator() {
     });
     
     emiRate.addEventListener('input', function() {
-        emiRateRange.value = this.value;
+        clampInputIfOutOfRange(emiRate, 1, 100);
+        emiRateRange.value = emiRate.value;
         calculateEMI();
     });
     
@@ -385,7 +521,8 @@ function setupEMICalculator() {
     });
     
     emiTenure.addEventListener('input', function() {
-        emiTenureRange.value = this.value;
+        clampInputIfOutOfRange(emiTenure, 1, 50);
+        emiTenureRange.value = emiTenure.value;
         calculateEMI();
     });
     
@@ -395,9 +532,9 @@ function setupEMICalculator() {
     });
     
     // Validate inputs
-    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, 10000, 50000000));
-    emiRate.addEventListener('blur', () => validateNumberInput(emiRate, 1, 30));
-    emiTenure.addEventListener('blur', () => validateNumberInput(emiTenure, 1, 30));
+    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, 1000, 100000000));
+    emiRate.addEventListener('blur', () => validateNumberInput(emiRate, 1, 100));
+    emiTenure.addEventListener('blur', () => validateNumberInput(emiTenure, 1, 50));
     
     function calculateEMI() {
         const amount = parseFloat(emiAmount.value) || 0;
@@ -412,9 +549,9 @@ function setupEMICalculator() {
         const totalPayment = emi * months;
         const totalInterest = totalPayment - amount;
         
-        document.getElementById('emi-monthly').textContent = formatCurrency(emi);
-        document.getElementById('emi-interest').textContent = formatCurrency(totalInterest);
-        document.getElementById('emi-total').textContent = formatCurrency(totalPayment);
+        document.getElementById('emi-monthly').textContent = formatCurrencyOrInfinity(emi);
+        document.getElementById('emi-interest').textContent = formatCurrencyOrInfinity(totalInterest);
+        document.getElementById('emi-total').textContent = formatCurrencyOrInfinity(totalPayment);
     }
     
     // Initial calculation
