@@ -210,27 +210,28 @@ function setupBasicCalculator() {
     });
   });
 
-  // Keyboard support
-  window.addEventListener('keydown', (e) => {
-    if (!display) return;
-    const key = e.key;
-    if (/[0-9]/.test(key) || ['+', '-', '*', '/', '(', ')', '.'].includes(key)) {
-      handleButton(key);
-      e.preventDefault();
-    } else if (key === 'Enter' || key === '=') {
-      evaluateExpr();
-      e.preventDefault();
-    } else if (key === 'Backspace') {
-      handleButton('BS');
-      e.preventDefault();
-    } else if (key === '%') {
-      handleButton('%');
-      e.preventDefault();
-    } else if (key === 'Escape') {
-      handleButton('C');
-      e.preventDefault();
-    }
-  });
+  // Keyboard support (scope to calculator display only)
+  if (display) {
+    display.addEventListener('keydown', (e) => {
+      const key = e.key;
+      if (/[0-9]/.test(key) || ['+', '-', '*', '/', '(', ')', '.'].includes(key)) {
+        handleButton(key);
+        e.preventDefault();
+      } else if (key === 'Enter' || key === '=') {
+        evaluateExpr();
+        e.preventDefault();
+      } else if (key === 'Backspace') {
+        handleButton('BS');
+        e.preventDefault();
+      } else if (key === '%') {
+        handleButton('%');
+        e.preventDefault();
+      } else if (key === 'Escape') {
+        handleButton('C');
+        e.preventDefault();
+      }
+    });
+  }
 }
 
 // Initialize when DOM is ready
