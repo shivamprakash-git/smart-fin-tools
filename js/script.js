@@ -15,6 +15,8 @@ if (localStorage.getItem('theme') === 'dark' ||
 // Ensure focused inputs are visible on mobile (avoid being hidden by keyboard)
 function setupInputFocusScroll() {
     const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const vv = window.visualViewport || null;
 
     const getHeaderOffset = () => {
         const header = document.querySelector('header');
@@ -22,42 +24,74 @@ function setupInputFocusScroll() {
         return (header ? header.getBoundingClientRect().height : 96) + 8;
     };
 
-    const scrollInputIntoView = (el) => {
-        // Defer a bit to let the keyboard animation start
-        setTimeout(() => {
-            const rect = el.getBoundingClientRect();
-            const vv = window.visualViewport;
-            const viewportHeight = vv ? vv.height : window.innerHeight;
-            const topThreshold = getHeaderOffset(); // keep above header
-            const bottomThreshold = viewportHeight - 20; // leave small bottom padding
+    let activeEl = null;
+    let scheduleTimer = null;
 
-            const isAbove = rect.top < topThreshold;
-            const isBelow = rect.bottom > bottomThreshold;
+    const scheduleScroll = () => {
+        if (!activeEl) return;
+        clearTimeout(scheduleTimer);
+        scheduleTimer = setTimeout(() => {
+            // Use rAF to read/layout just-in-time
+            requestAnimationFrame(() => {
+                if (!activeEl) return;
+                const rect = activeEl.getBoundingClientRect();
+                const viewportHeight = vv ? vv.height : window.innerHeight;
+                const viewportTopOffset = vv ? vv.offsetTop : 0;
+                const topThreshold = getHeaderOffset();
+                const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
 
-            if (isAbove) {
-                const y = window.scrollY + rect.top - topThreshold;
-                window.scrollTo({ top: Math.max(0, y), behavior: prefersReduce ? 'auto' : 'smooth' });
-            } else if (isBelow) {
-                // Option 1: just enough to bring bottom above the bottom threshold
-                const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
-                // Option 2: place input around 1/3 from top
-                const oneThirdTop = window.scrollY + rect.top - (viewportHeight / 3);
-                const target = Math.max(0, Math.min(minimalTop, oneThirdTop));
-                window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
-            }
-        }, 150);
+                const isAbove = (rect.top - viewportTopOffset) < topThreshold;
+                const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
+
+                if (!isAbove && !isBelow) return; // Already comfortably visible
+
+                let target;
+                if (isAbove) {
+                    target = window.scrollY + rect.top - topThreshold;
+                } else {
+                    const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
+                    const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
+                    target = Math.max(0, Math.min(minimalTop, oneThirdTop));
+                }
+
+                const current = window.scrollY;
+                if (Math.abs(current - target) > 1) {
+                    window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
+                }
+            });
+        }, isIOS ? 280 : 120);
     };
 
-    const focusHandler = (e) => {
+    const onFocusIn = (e) => {
         const el = e.target;
         if (!el || !(el instanceof Element)) return;
-        if (el.matches('input, textarea, select')) {
-            scrollInputIntoView(el);
+        if (!el.matches('input, textarea, select')) return;
+        activeEl = el;
+        scheduleScroll();
+    };
+
+    const onFocusOut = (e) => {
+        if (e.target === activeEl) {
+            activeEl = null;
+            clearTimeout(scheduleTimer);
+            scheduleTimer = null;
         }
     };
 
-    // Global listener covers existing and future inputs
-    document.addEventListener('focusin', focusHandler);
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+
+    // Reposition on visual viewport changes (keyboard height/movement)
+    if (vv) {
+        let vvTimer = null;
+        const onVVChange = () => {
+            if (!activeEl) return;
+            clearTimeout(vvTimer);
+            vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
+        };
+        vv.addEventListener('resize', onVVChange);
+        vv.addEventListener('scroll', onVVChange);
+    }
 }
 
 themeToggle.addEventListener('click', () => {
