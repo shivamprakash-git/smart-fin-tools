@@ -124,6 +124,11 @@ document.querySelectorAll('.tab-btn').forEach(button => {
             section.classList.add('hidden');
         });
         document.getElementById(`${tabName}-calculator`).classList.remove('hidden');
+
+        // Refresh charts for the selected calculator
+        if (window._recalc && typeof window._recalc[tabName] === 'function') {
+            window._recalc[tabName]();
+        }
     });
 });
 
@@ -165,6 +170,141 @@ function clampInputIfOutOfRange(input, min, max) {
     return clamped;
 }
 
+// Charts: Line (growth) + Pie (breakdown)
+let lineChart = null;
+let pieChart = null;
+
+function getChartCtx(id) {
+    const el = document.getElementById(id);
+    return el ? el.getContext('2d') : null;
+}
+
+function ensureCharts() {
+    const lineCtx = getChartCtx('calc-line-chart');
+    const pieCtx = getChartCtx('calc-pie-chart');
+
+    if (!lineChart && lineCtx && typeof Chart !== 'undefined') {
+        lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Invested',
+                        data: [],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.15)',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Returns',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: '#94a3b8' } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const dsLabel = ctx.dataset.label || '';
+                                const val = ctx.parsed.y;
+                                // Use existing formatter if available
+                                if (typeof formatCurrencyOrInfinity === 'function') {
+                                    return `${dsLabel}: ${formatCurrencyOrInfinity(val)}`;
+                                }
+                                try {
+                                    return `${dsLabel}: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(val)}`;
+                                } catch {
+                                    return `${dsLabel}: ${val}`;
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    if (!pieChart && pieCtx && typeof Chart !== 'undefined') {
+        pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Invested', 'Returns'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#6366f1', '#0ea5e9']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+            }
+        });
+    }
+}
+
+function updateCharts({ labels, investedSeries, returnsSeries, lineLabels, lineVisibility, pieLabels, pieData, pieColors, ui }) {
+    ensureCharts();
+    // Update UI titles/badges when provided
+    if (ui) {
+        const gt = document.getElementById('growth-title');
+        const gb = document.getElementById('growth-badge');
+        const bt = document.getElementById('breakdown-title');
+        const bb = document.getElementById('breakdown-badge');
+        if (gt && ui.growthTitle) gt.textContent = ui.growthTitle;
+        if (gb && ui.growthBadge) gb.textContent = ui.growthBadge;
+        if (bt && ui.breakdownTitle) bt.textContent = ui.breakdownTitle;
+        if (bb && ui.breakdownBadge) bb.textContent = ui.breakdownBadge;
+    }
+    if (lineChart && Array.isArray(labels) && Array.isArray(investedSeries) && Array.isArray(returnsSeries)) {
+        lineChart.data.labels = labels;
+        lineChart.data.datasets[0].data = investedSeries;
+        lineChart.data.datasets[1].data = returnsSeries;
+        if (Array.isArray(lineLabels)) {
+            if (lineLabels[0]) lineChart.data.datasets[0].label = lineLabels[0];
+            if (lineLabels[1]) lineChart.data.datasets[1].label = lineLabels[1];
+        }
+        if (Array.isArray(lineVisibility)) {
+            if (typeof lineVisibility[0] === 'boolean') lineChart.data.datasets[0].hidden = !lineVisibility[0];
+            if (typeof lineVisibility[1] === 'boolean') lineChart.data.datasets[1].hidden = !lineVisibility[1];
+        } else {
+            // default: both visible
+            lineChart.data.datasets[0].hidden = false;
+            lineChart.data.datasets[1].hidden = false;
+        }
+        lineChart.update();
+    }
+    if (pieChart && Array.isArray(pieLabels) && Array.isArray(pieData)) {
+        pieChart.data.labels = pieLabels;
+        pieChart.data.datasets[0].data = pieData;
+        if (Array.isArray(pieColors)) {
+            pieChart.data.datasets[0].backgroundColor = pieColors;
+        }
+        pieChart.update();
+    }
+}
+
 // SIP Calculator
 function setupSIPCalculator() {
     const sipAmount = document.getElementById('sip-amount');
@@ -176,7 +316,7 @@ function setupSIPCalculator() {
     
     // Link inputs and range sliders (live clamp to keep calc consistent)
     sipAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(sipAmount, 1, 100000000);
+        clampInputIfOutOfRange(sipAmount, 1, 500000000);
         sipAmountRange.value = sipAmount.value;
         calculateSIP();
     });
@@ -187,7 +327,7 @@ function setupSIPCalculator() {
     });
     
     sipPeriod.addEventListener('input', function() {
-        clampInputIfOutOfRange(sipPeriod, 1, 50);
+        clampInputIfOutOfRange(sipPeriod, 1, 100);
         sipPeriodRange.value = sipPeriod.value;
         calculateSIP();
     });
@@ -209,8 +349,8 @@ function setupSIPCalculator() {
     });
     
     // Validate inputs
-    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, 1, 100000000));
-    sipPeriod.addEventListener('blur', () => validateNumberInput(sipPeriod, 1, 50));
+    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, 1, 500000000));
+    sipPeriod.addEventListener('blur', () => validateNumberInput(sipPeriod, 1, 100));
     sipRate.addEventListener('blur', () => validateNumberInput(sipRate, 1, 100));
     
     function calculateSIP() {
@@ -229,9 +369,40 @@ function setupSIPCalculator() {
         document.getElementById('sip-invested').textContent = formatCurrencyOrInfinity(invested);
         document.getElementById('sip-returns').textContent = formatCurrencyOrInfinity(returns);
         document.getElementById('sip-total').textContent = formatCurrencyOrInfinity(futureValue);
+
+        // Yearly invested vs returns
+        const labels = [];
+        const investedSeries = [];
+        const returnsSeries = [];
+        for (let y = 1; y <= Math.max(1, Math.round(period)); y++) {
+            const m = y * 12;
+            const val = amount * (((Math.pow(1 + monthlyRate, m) - 1) / monthlyRate) * (1 + monthlyRate));
+            const inv = amount * m;
+            labels.push(`Y${y}`);
+            investedSeries.push(inv);
+            returnsSeries.push(Math.max(0, val - inv));
+        }
+        updateCharts({
+            labels,
+            investedSeries,
+            returnsSeries,
+            lineLabels: ['Invested', 'Returns'],
+            lineVisibility: [true, true],
+            pieLabels: ['Invested', 'Returns'],
+            pieData: [invested, Math.max(0, returns)],
+            pieColors: ['#6366f1', '#0ea5e9'],
+            ui: {
+                growthTitle: 'SIP Growth Over Time',
+                growthBadge: 'Tip: Longer tenure boosts compounding',
+                breakdownTitle: 'Breakdown',
+                breakdownBadge: 'Invested vs Returns'
+            }
+        });
     }
     
     // Initial calculation
+    window._recalc = window._recalc || {};
+    window._recalc['sip'] = calculateSIP;
     calculateSIP();
 }
 
@@ -246,7 +417,7 @@ function setupLumpsumCalculator() {
     
     // Link inputs and range sliders (live clamp)
     lumpsumAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(lumpsumAmount, 1, 1000000000);
+        clampInputIfOutOfRange(lumpsumAmount, 1, 5000000000);
         lumpsumAmountRange.value = lumpsumAmount.value;
         calculateLumpsum();
     });
@@ -257,7 +428,7 @@ function setupLumpsumCalculator() {
     });
     
     lumpsumPeriod.addEventListener('input', function() {
-        clampInputIfOutOfRange(lumpsumPeriod, 1, 50);
+        clampInputIfOutOfRange(lumpsumPeriod, 1, 100);
         lumpsumPeriodRange.value = lumpsumPeriod.value;
         calculateLumpsum();
     });
@@ -279,8 +450,8 @@ function setupLumpsumCalculator() {
     });
     
     // Final clamp on blur (live clamp is already applied in input handlers above)
-    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, 1, 1000000000));
-    lumpsumPeriod.addEventListener('blur', () => validateNumberInput(lumpsumPeriod, 1, 50));
+    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, 1, 5000000000));
+    lumpsumPeriod.addEventListener('blur', () => validateNumberInput(lumpsumPeriod, 1, 100));
     lumpsumRate.addEventListener('blur', () => validateNumberInput(lumpsumRate, 1, 100));
     
     function calculateLumpsum() {
@@ -296,9 +467,38 @@ function setupLumpsumCalculator() {
         document.getElementById('lumpsum-invested').textContent = formatCurrencyOrInfinity(amount);
         document.getElementById('lumpsum-returns').textContent = formatCurrencyOrInfinity(returns);
         document.getElementById('lumpsum-total').textContent = formatCurrencyOrInfinity(futureValue);
+
+        // Yearly invested (flat initial) vs returns growth
+        const labels = [];
+        const investedSeries = [];
+        const returnsSeries = [];
+        for (let y = 1; y <= Math.max(1, Math.round(period)); y++) {
+            const valY = amount * Math.pow(1 + rate/100, y);
+            labels.push(`Y${y}`);
+            investedSeries.push(amount);
+            returnsSeries.push(Math.max(0, valY - amount));
+        }
+        updateCharts({
+            labels,
+            investedSeries,
+            returnsSeries,
+            lineLabels: ['Invested', 'Returns'],
+            lineVisibility: [true, true],
+            pieLabels: ['Invested', 'Returns'],
+            pieData: [amount, Math.max(0, returns)],
+            pieColors: ['#6366f1', '#0ea5e9'],
+            ui: {
+                growthTitle: 'Lumpsum Growth Over Time',
+                growthBadge: 'Tip: Time in market > timing',
+                breakdownTitle: 'Breakdown',
+                breakdownBadge: 'Invested vs Returns'
+            }
+        });
     }
     
     // Initial calculation
+    window._recalc = window._recalc || {};
+    window._recalc['lumpsum'] = calculateLumpsum;
     calculateLumpsum();
 }
 
@@ -352,7 +552,7 @@ function setupGSTCalculator() {
     
     // Live input + validation for consistent calc
     gstAmount.addEventListener('input', () => {
-        clampInputIfOutOfRange(gstAmount, 1, 1000000000);
+        clampInputIfOutOfRange(gstAmount, 1, 5000000000);
         calculateGST();
     });
     gstRateInput.addEventListener('input', () => {
@@ -360,7 +560,7 @@ function setupGSTCalculator() {
         calculateGST();
     });
     // Final clamp on blur
-    gstAmount.addEventListener('blur', () => validateNumberInput(gstAmount, 1, 1000000000));
+    gstAmount.addEventListener('blur', () => validateNumberInput(gstAmount, 1, 5000000000));
     gstRateInput.addEventListener('blur', () => validateNumberInput(gstRateInput, 0, 100));
     
     function calculateGST() {
@@ -383,9 +583,29 @@ function setupGSTCalculator() {
         document.getElementById('gst-original').textContent = formatCurrencyOrInfinity(original);
         document.getElementById('gst-tax').textContent = formatCurrencyOrInfinity(tax);
         document.getElementById('gst-net').textContent = formatCurrencyOrInfinity(net);
+
+        // Base vs GST lines
+        updateCharts({
+            labels: ['Before', 'After'],
+            investedSeries: [original, original],
+            returnsSeries: [0, Math.max(0, tax)],
+            lineLabels: ['Base', 'GST'],
+            lineVisibility: [true, true],
+            pieLabels: ['Base', 'GST'],
+            pieData: [original, Math.max(0, tax)],
+            pieColors: ['#6366f1', '#0ea5e9'],
+            ui: {
+                growthTitle: 'GST Impact',
+                growthBadge: 'Tip: Choose Add vs Remove GST',
+                breakdownTitle: 'Breakdown',
+                breakdownBadge: 'Base vs GST'
+            }
+        });
     }
     
     // Initial calculation
+    window._recalc = window._recalc || {};
+    window._recalc['gst'] = calculateGST;
     calculateGST();
 }
 
@@ -400,7 +620,7 @@ function setupEMICalculator() {
     
     // Link inputs and range sliders (live clamp)
     emiAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(emiAmount, 1, 1000000000);
+        clampInputIfOutOfRange(emiAmount, 1, 5000000000);
         emiAmountRange.value = emiAmount.value;
         calculateEMI();
     });
@@ -422,7 +642,7 @@ function setupEMICalculator() {
     });
     
     emiTenure.addEventListener('input', function() {
-        clampInputIfOutOfRange(emiTenure, 1, 50);
+        clampInputIfOutOfRange(emiTenure, 1, 100);
         emiTenureRange.value = emiTenure.value;
         calculateEMI();
     });
@@ -433,9 +653,9 @@ function setupEMICalculator() {
     });
     
     // Validate inputs
-    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, 1, 1000000000));
+    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, 1, 5000000000));
     emiRate.addEventListener('blur', () => validateNumberInput(emiRate, 1, 100));
-    emiTenure.addEventListener('blur', () => validateNumberInput(emiTenure, 1, 50));
+    emiTenure.addEventListener('blur', () => validateNumberInput(emiTenure, 1, 100));
     
     function calculateEMI() {
         const amount = parseFloat(emiAmount.value) || 0;
@@ -453,9 +673,53 @@ function setupEMICalculator() {
         document.getElementById('emi-monthly').textContent = formatCurrencyOrInfinity(emi);
         document.getElementById('emi-interest').textContent = formatCurrencyOrInfinity(totalInterest);
         document.getElementById('emi-total').textContent = formatCurrencyOrInfinity(totalPayment);
+
+        // Cumulative principal vs interest paid by year (amortization)
+        const labels = [];
+        const investedSeries = [];
+        const returnsSeries = [];
+        let remaining = amount;
+        let cumPrincipal = 0;
+        let cumInterest = 0;
+        for (let m = 1; m <= months; m++) {
+            const interestPortion = remaining * monthlyRate;
+            const principalPortion = emi - interestPortion;
+            cumInterest += interestPortion;
+            cumPrincipal += principalPortion;
+            remaining -= principalPortion;
+            if (m % 12 === 0) {
+                const y = m / 12;
+                labels.push(`Y${y}`);
+                investedSeries.push(Math.max(0, cumPrincipal));
+                returnsSeries.push(Math.max(0, cumInterest));
+            }
+        }
+        if (labels.length === 0) {
+            labels.push('Y1');
+            investedSeries.push(Math.max(0, amount));
+            returnsSeries.push(Math.max(0, totalInterest));
+        }
+        updateCharts({
+            labels,
+            investedSeries,
+            returnsSeries,
+            lineLabels: ['Principal', 'Interest'],
+            lineVisibility: [true, true],
+            pieLabels: ['Principal', 'Interest'],
+            pieData: [amount, Math.max(0, totalInterest)],
+            pieColors: ['#6366f1', '#0ea5e9'],
+            ui: {
+                growthTitle: 'EMI Payments Over Time',
+                growthBadge: 'Tip: Prepayments cut total interest',
+                breakdownTitle: 'Breakdown',
+                breakdownBadge: 'Principal vs Interest'
+            }
+        });
     }
     
     // Initial calculation
+    window._recalc = window._recalc || {};
+    window._recalc['emi'] = calculateEMI;
     calculateEMI();
 }
 
@@ -467,6 +731,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setupGSTCalculator();
     setupEMICalculator();
     setupInputFocusScroll();
+
+    // Ensure initial charts reflect the active tab's values
+    const activeBtn = document.querySelector('.tab-btn[aria-selected="true"]');
+    const fallbackBtn = activeBtn || document.querySelector('.tab-btn');
+    if (fallbackBtn) {
+        const tabName = fallbackBtn.getAttribute('data-tab');
+        if (window._recalc && typeof window._recalc[tabName] === 'function') {
+            window._recalc[tabName]();
+        }
+    }
 });
 
 // Mobile menu toggle
