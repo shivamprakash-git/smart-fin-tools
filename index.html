@@ -46,7 +46,7 @@
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen">
     <div class="container mx-auto px-4 py-6">
         <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center py-6 mb-8 border-b border-gray-200 dark:border-gray-700">
+        <header class="flex flex-col md:flex-row justify-between items-center py-6 mb-8 border-b border-gray-300 dark:border-gray-700">
             <div class="flex items-center mb-4 md:mb-0">
                 <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mr-3">
                     <i class="fas fa-calculator text-white text-xl"></i>
@@ -56,28 +56,35 @@
             
             <div class="flex items-center space-x-4">
                 <nav class="hidden md:flex space-x-6">
-                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">Home</a>
-                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">About</a>
-                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">Contact</a>
+                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Home</a>
+                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">About</a>
+                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Contact</a>
                 </nav>
                 
-                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200">
                     <i class="fas fa-moon dark:hidden"></i>
                     <i class="fas fa-sun hidden dark:block"></i>
                 </button>
                 
-                <button class="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <button id="mobile-menu-toggle" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation" class="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
         </header>
+
+        <!-- Mobile Menu -->
+        <nav id="mobile-menu" class="md:hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6 -mt-4 hidden">
+            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
+            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">About</a>
+            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Contact</a>
+        </nav>
 
         <!-- Hero Section -->
         <section class="text-center mb-12">
             <h1 class="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
                 Smart Financial Calculators
             </h1>
-            <p class="max-w-2xl mx-auto text-gray-600 dark:text-gray-400">
+            <p class="max-w-2xl mx-auto text-gray-800 dark:text-gray-400">
                 Easily calculate SIP returns, Lumpsum investments, GST amounts, and EMI payments with our intuitive financial tools.
             </p>
         </section>
@@ -86,16 +93,16 @@
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl">
             <!-- Tabs Navigation -->
             <div class="flex flex-wrap justify-center gap-1 sm:gap-2 bg-gray-100 dark:bg-gray-700 py-2 px-1">
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg active" data-tab="sip">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 text-primary-600 dark:text-primary-400 border-primary-600 bg-primary-500/10" data-tab="sip" aria-selected="true">
                     <i class="fas fa-chart-line mr-2"></i>SIP Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="lumpsum">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="lumpsum" aria-selected="false">
                     <i class="fas fa-coins mr-2"></i>Lumpsum Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="gst">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="gst" aria-selected="false">
                     <i class="fas fa-percent mr-2"></i>GST Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="emi">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="emi" aria-selected="false">
                     <i class="fas fa-credit-card mr-2"></i>EMI Calculator
                 </button>
             </div>
@@ -108,7 +115,7 @@
                         <div>
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Monthly Investment (₹)</label>
-                                <input type="number" id="sip-amount" class="input-field" placeholder="e.g. 5000" min="100" max="1000000" step="100" value="5000">
+                                <input type="number" id="sip-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 5000" min="100" max="1000000" step="100" value="5000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹100</span>
                                     <span>₹1,000,000</span>
@@ -118,7 +125,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Investment Period (Years)</label>
-                                <input type="number" id="sip-period" class="input-field" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
+                                <input type="number" id="sip-period" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>40 Years</span>
@@ -128,7 +135,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
-                                <input type="number" id="sip-rate" class="input-field" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
+                                <input type="number" id="sip-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>30%</span>
@@ -136,30 +143,30 @@
                                 <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="sip-rate-range">
                             </div>
                             
-                            <button id="calculate-sip" class="w-full btn-primary">
+                            <button id="calculate-sip" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
                                 Calculate SIP
                             </button>
                         </div>
                         
                         <div>
-                            <div class="result-card">
+                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease]">
                                 <h3 class="text-xl font-semibold mb-4 text-center">SIP Results</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Invested Amount</p>
-                                        <p id="sip-invested" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Invested Amount</p>
+                                        <p id="sip-invested" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Estimated Returns</p>
-                                        <p id="sip-returns" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Estimated Returns</p>
+                                        <p id="sip-returns" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Total Value</p>
-                                        <p id="sip-total" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Total Value</p>
+                                        <p id="sip-total" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                 </div>
                                 <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">The power of compounding helps your money grow exponentially over time.</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">The power of compounding helps your money grow exponentially over time.</p>
                                 </div>
                             </div>
                         </div>
@@ -172,7 +179,7 @@
                         <div>
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Investment Amount (₹)</label>
-                                <input type="number" id="lumpsum-amount" class="input-field" placeholder="e.g. 100000" min="1000" max="10000000" step="1000" value="100000">
+                                <input type="number" id="lumpsum-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 100000" min="1000" max="10000000" step="1000" value="100000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1,000</span>
                                     <span>₹10,000,000</span>
@@ -182,7 +189,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Investment Period (Years)</label>
-                                <input type="number" id="lumpsum-period" class="input-field" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
+                                <input type="number" id="lumpsum-period" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>40 Years</span>
@@ -192,7 +199,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
-                                <input type="number" id="lumpsum-rate" class="input-field" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
+                                <input type="number" id="lumpsum-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>30%</span>
@@ -200,30 +207,30 @@
                                 <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="lumpsum-rate-range">
                             </div>
                             
-                            <button id="calculate-lumpsum" class="w-full btn-primary">
+                            <button id="calculate-lumpsum" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
                                 Calculate Lumpsum
                             </button>
                         </div>
                         
                         <div>
-                            <div class="result-card">
+                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease]">
                                 <h3 class="text-xl font-semibold mb-4 text-center">Lumpsum Results</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Invested Amount</p>
-                                        <p id="lumpsum-invested" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Invested Amount</p>
+                                        <p id="lumpsum-invested" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Estimated Returns</p>
-                                        <p id="lumpsum-returns" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Estimated Returns</p>
+                                        <p id="lumpsum-returns" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Total Value</p>
-                                        <p id="lumpsum-total" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Total Value</p>
+                                        <p id="lumpsum-total" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                 </div>
                                 <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Lumpsum investments can yield significant returns with compounding over time.</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Lumpsum investments can yield significant returns with compounding over time.</p>
                                 </div>
                             </div>
                         </div>
@@ -236,7 +243,7 @@
                         <div>
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Amount (₹)</label>
-                                <input type="number" id="gst-amount" class="input-field" placeholder="e.g. 10000" min="1" max="10000000" step="0.01" value="10000">
+                                <input type="number" id="gst-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10000" min="1" max="10000000" step="0.01" value="10000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1</span>
                                     <span>₹10,000,000</span>
@@ -246,46 +253,46 @@
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">GST Rate (%)</label>
                                 <div class="grid grid-cols-4 gap-2 mb-3">
-                                    <button data-rate="5" class="gst-rate-btn">5%</button>
-                                    <button data-rate="12" class="gst-rate-btn">12%</button>
-                                    <button data-rate="18" class="gst-rate-btn active">18%</button>
-                                    <button data-rate="28" class="gst-rate-btn">28%</button>
+                                    <button data-rate="5" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">5%</button>
+                                    <button data-rate="12" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">12%</button>
+                                    <button data-rate="18" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-primary-600 text-white">18%</button>
+                                    <button data-rate="28" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">28%</button>
                                 </div>
-                                <input type="number" id="gst-rate" class="input-field" min="0" max="100" step="0.1" value="18">
+                                <input type="number" id="gst-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" min="0" max="100" step="0.1" value="18">
                             </div>
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Calculation Type</label>
                                 <div class="flex rounded-lg overflow-hidden">
-                                    <button id="gst-add" class="flex-1 py-3 btn-primary rounded-none rounded-l-lg">Add GST</button>
-                                    <button id="gst-remove" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-none rounded-r-lg">Remove GST</button>
+                                    <button id="gst-add" aria-pressed="true" class="flex-1 py-3 rounded-none rounded-l-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">Add GST</button>
+                                    <button id="gst-remove" aria-pressed="false" class="flex-1 py-3 rounded-none rounded-r-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Remove GST</button>
                                 </div>
                             </div>
                             
-                            <button id="calculate-gst" class="w-full btn-primary">
+                            <button id="calculate-gst" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
                                 Calculate GST
                             </button>
                         </div>
                         
                         <div>
-                            <div class="result-card">
+                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease]">
                                 <h3 class="text-xl font-semibold mb-4 text-center">GST Results</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Original Amount</p>
-                                        <p id="gst-original" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Original Amount</p>
+                                        <p id="gst-original" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">GST Amount</p>
-                                        <p id="gst-tax" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">GST Amount</p>
+                                        <p id="gst-tax" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Net Amount</p>
-                                        <p id="gst-net" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Net Amount</p>
+                                        <p id="gst-net" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                 </div>
                                 <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">GST (Goods and Services Tax) is a comprehensive indirect tax on the supply of goods and services.</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">GST (Goods and Services Tax) is a comprehensive indirect tax on the supply of goods and services.</p>
                                 </div>
                             </div>
                         </div>
@@ -298,7 +305,7 @@
                         <div>
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Loan Amount (₹)</label>
-                                <input type="number" id="emi-amount" class="input-field" placeholder="e.g. 500000" min="10000" max="50000000" step="1000" value="500000">
+                                <input type="number" id="emi-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 500000" min="10000" max="50000000" step="1000" value="500000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹10,000</span>
                                     <span>₹50,000,000</span>
@@ -308,7 +315,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Interest Rate (%)</label>
-                                <input type="number" id="emi-rate" class="input-field" placeholder="e.g. 8.5" min="1" max="30" step="0.01" value="8.5">
+                                <input type="number" id="emi-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 8.5" min="1" max="30" step="0.01" value="8.5">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>30%</span>
@@ -318,7 +325,7 @@
                             
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Loan Tenure (Years)</label>
-                                <input type="number" id="emi-tenure" class="input-field" placeholder="e.g. 20" min="1" max="30" step="0.5" value="20">
+                                <input type="number" id="emi-tenure" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 20" min="1" max="30" step="0.5" value="20">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>30 Years</span>
@@ -326,26 +333,26 @@
                                 <input type="range" min="1" max="30" step="0.5" value="20" class="w-full mt-2 range-slider" id="emi-tenure-range">
                             </div>
                             
-                            <button id="calculate-emi" class="w-full btn-primary">
+                            <button id="calculate-emi" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
                                 Calculate EMI
                             </button>
                         </div>
                         
                         <div>
-                            <div class="result-card">
+                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease]">
                                 <h3 class="text-xl font-semibold mb-4 text-center">EMI Results</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Monthly EMI</p>
-                                        <p id="emi-monthly" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Monthly EMI</p>
+                                        <p id="emi-monthly" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Total Interest</p>
-                                        <p id="emi-interest" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Total Interest</p>
+                                        <p id="emi-interest" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 dark:text-gray-400">Total Payment</p>
-                                        <p id="emi-total" class="result-value">₹0</p>
+                                        <p class="text-gray-800 dark:text-gray-400">Total Payment</p>
+                                        <p id="emi-total" class="text-2xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">₹0</p>
                                     </div>
                                 </div>
                                 <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -361,18 +368,18 @@
         <!-- Footer -->
         <footer class="py-8 border-t border-gray-200 dark:border-gray-700">
             <div class="text-center">
-                <p class="text-gray-600 dark:text-gray-400 mb-4">© 2025 SmartFinTools. All rights reserved.</p>
+                <p class="text-gray-700 dark:text-gray-400 mb-4">© 2025 SmartFinTools. All rights reserved.</p>
                 <div class="flex justify-center space-x-4">
-                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                    <a href="#" class="text-gray-700 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                    <a href="#" class="text-gray-700 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                    <a href="#" class="text-gray-700 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
                         <i class="fab fa-linkedin-in"></i>
                     </a>
-                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                    <a href="#" class="text-gray-700 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
                         <i class="fab fa-github"></i>
                     </a>
                 </div>

@@ -23,13 +23,19 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
-// Tab Switching
+// Tab Switching (Tailwind utilities + ARIA)
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.addEventListener('click', () => {
-        // Update active tab
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        
+        // Update active tab styles and aria
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.setAttribute('aria-selected', 'false');
+            btn.classList.remove('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400');
+            btn.classList.add('border-transparent', 'text-gray-700', 'dark:text-gray-200');
+        });
+        button.setAttribute('aria-selected', 'true');
+        button.classList.add('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400');
+        button.classList.remove('border-transparent', 'text-gray-700', 'dark:text-gray-200');
+
         // Show selected calculator
         const tabName = button.getAttribute('data-tab');
         document.querySelectorAll('.calculator-section').forEach(section => {
@@ -196,31 +202,43 @@ function setupGSTCalculator() {
     const gstAddBtn = document.getElementById('gst-add');
     const gstRemoveBtn = document.getElementById('gst-remove');
     
-    // GST Rate buttons
+    // GST Rate buttons (Tailwind class toggling)
     gstRateBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const rate = this.getAttribute('data-rate');
-            gstRateBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+            gstRateBtns.forEach(b => {
+                b.classList.remove('bg-primary-600', 'text-white');
+                b.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
+            });
+            this.classList.add('bg-primary-600', 'text-white');
+            this.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
             gstRateInput.value = rate;
             calculateGST();
         });
     });
     
-    // GST Calculation Type
+    // GST Calculation Type (Tailwind + ARIA)
     gstAddBtn.addEventListener('click', function() {
-        gstAddBtn.classList.add('btn-primary');
-        gstAddBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-        gstRemoveBtn.classList.remove('btn-primary');
-        gstRemoveBtn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+        gstAddBtn.setAttribute('aria-pressed', 'true');
+        gstRemoveBtn.setAttribute('aria-pressed', 'false');
+        // Active gradient for Add
+        gstAddBtn.classList.add('bg-gradient-to-br', 'from-primary-500', 'to-secondary-500', 'text-white');
+        gstAddBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200');
+        // Inactive gray for Remove
+        gstRemoveBtn.classList.remove('bg-gradient-to-br', 'from-primary-500', 'to-secondary-500', 'text-white');
+        gstRemoveBtn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200');
         calculateGST();
     });
     
     gstRemoveBtn.addEventListener('click', function() {
-        gstRemoveBtn.classList.add('btn-primary');
-        gstRemoveBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-        gstAddBtn.classList.remove('btn-primary');
-        gstAddBtn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+        gstRemoveBtn.setAttribute('aria-pressed', 'true');
+        gstAddBtn.setAttribute('aria-pressed', 'false');
+        // Active gradient for Remove
+        gstRemoveBtn.classList.add('bg-gradient-to-br', 'from-primary-500', 'to-secondary-500', 'text-white');
+        gstRemoveBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200');
+        // Inactive gray for Add
+        gstAddBtn.classList.remove('bg-gradient-to-br', 'from-primary-500', 'to-secondary-500', 'text-white');
+        gstAddBtn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200');
         calculateGST();
     });
     
@@ -231,7 +249,7 @@ function setupGSTCalculator() {
     function calculateGST() {
         const amount = parseFloat(gstAmount.value) || 0;
         const rate = parseFloat(gstRateInput.value) || 0;
-        const isAddGST = gstAddBtn.classList.contains('btn-primary');
+        const isAddGST = gstAddBtn.getAttribute('aria-pressed') === 'true';
         
         let original, tax, net;
         
@@ -323,8 +341,58 @@ function setupEMICalculator() {
 
 // Initialize all calculators
 document.addEventListener('DOMContentLoaded', () => {
+    setupMobileMenu();
     setupSIPCalculator();
     setupLumpsumCalculator();
     setupGSTCalculator();
     setupEMICalculator();
 });
+
+// Mobile menu toggle
+function setupMobileMenu() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('mobile-menu');
+    if (!toggle || !menu) return;
+
+    const openIcon = '<i class="fas fa-bars"></i>';
+    const closeIcon = '<i class="fas fa-times"></i>';
+
+    function setExpanded(expanded) {
+        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        toggle.innerHTML = expanded ? closeIcon : openIcon;
+    }
+
+    function isHidden() {
+        return menu.classList.contains('hidden');
+    }
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.classList.toggle('hidden');
+        setExpanded(!isHidden());
+    });
+
+    // Close when clicking a link in the menu
+    menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            menu.classList.add('hidden');
+            setExpanded(false);
+        });
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !isHidden()) {
+            menu.classList.add('hidden');
+            setExpanded(false);
+        }
+    });
+
+    // Optional: close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && e.target !== toggle && !isHidden()) {
+            menu.classList.add('hidden');
+            setExpanded(false);
+        }
+    });
+}
