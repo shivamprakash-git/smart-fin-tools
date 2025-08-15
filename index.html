@@ -16,6 +16,19 @@
     <link rel="icon" type="image/png" sizes="192x192" href="images/icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="images/icons/icon-512.png">
     <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon-180.png">
+    <script>
+        // Early theme initialization to avoid light-mode flash on refresh
+        (function () {
+            try {
+                const stored = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldDark = stored === 'dark' || (!stored && prefersDark);
+                const root = document.documentElement;
+                if (shouldDark) root.classList.add('dark');
+                else root.classList.remove('dark');
+            } catch (e) { /* no-op */ }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -456,7 +469,7 @@
                                 <!-- Display -->
                                 <div class="rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-3">
                                     <div id="calc-history" class="h-5 text-xs text-right text-gray-500 dark:text-gray-400 truncate"></div>
-                                    <input id="calc-display" class="w-full bg-transparent text-right text-2xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none" placeholder="0" aria-label="Calculator input" />
+                                    <input id="calc-display" type="text" inputmode="decimal" class="w-full bg-transparent text-right text-2xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none" placeholder="0" aria-label="Calculator input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
                                 </div>
                                 <!-- Buttons -->
                                 <div class="grid grid-cols-4 gap-2 select-none">
