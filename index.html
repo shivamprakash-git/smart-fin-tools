@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="light scroll-smooth motion-reduce:transition-none motion-reduce:animate-none">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,7 +48,7 @@
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center py-6 mb-8 border-b border-gray-300 dark:border-gray-700">
             <div class="flex items-center mb-4 md:mb-0">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mr-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mr-3 transition-transform duration-300 ease-out hover:rotate-6 hover:scale-105">
                     <i class="fas fa-calculator text-white text-xl"></i>
                 </div>
                 <h1 class="text-2xl font-bold">Smart<span class="text-primary-600 dark:text-primary-400">FinTools</span></h1>
@@ -56,17 +56,17 @@
             
             <div class="flex items-center space-x-4">
                 <nav class="hidden md:flex space-x-6">
-                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Home</a>
-                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">About</a>
-                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Contact</a>
+                    <a href="#home" class="relative text-gray-700 dark:text-gray-300 transition-colors hover:text-primary-600 dark:hover:text-primary-400 bg-gradient-to-r from-primary-600 to-secondary-500 bg-[length:0%_2px] hover:bg-[length:100%_2px] bg-[position:0_100%] bg-no-repeat">Home</a>
+                    <a href="#about" class="relative text-gray-700 dark:text-gray-300 transition-colors hover:text-primary-600 dark:hover:text-primary-400 bg-gradient-to-r from-primary-600 to-secondary-500 bg-[length:0%_2px] hover:bg-[length:100%_2px] bg-[position:0_100%] bg-no-repeat">About</a>
+                    <a href="#contact" class="relative text-gray-700 dark:text-gray-300 transition-colors hover:text-primary-600 dark:hover:text-primary-400 bg-gradient-to-r from-primary-600 to-secondary-500 bg-[length:0%_2px] hover:bg-[length:100%_2px] bg-[position:0_100%] bg-no-repeat">Contact</a>
                 </nav>
                 
-                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200">
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200 active:scale-95 transform duration-200 hover:rotate-3 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-400/50">
                     <i class="fas fa-moon dark:hidden"></i>
                     <i class="fas fa-sun hidden dark:block"></i>
                 </button>
                 
-                <button id="mobile-menu-toggle" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation" class="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200">
+                <button id="mobile-menu-toggle" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation" class="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200 active:scale-95 transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-400/50">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -74,13 +74,13 @@
 
         <!-- Mobile Menu -->
         <nav id="mobile-menu" class="md:hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6 -mt-4 hidden">
-            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
-            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">About</a>
-            <a href="#" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Contact</a>
+            <a href="#home" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200 ease-out hover:translate-x-2">Home</a>
+            <a href="#about" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200 ease-out hover:translate-x-2">About</a>
+            <a href="#contact" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200 ease-out hover:translate-x-2">Contact</a>
         </nav>
 
         <!-- Hero Section -->
-        <section class="text-center mb-12">
+        <section id="home" class="text-center mb-12 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease]">
             <h1 class="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
                 Smart Financial Calculators
             </h1>
@@ -90,19 +90,19 @@
         </section>
 
         <!-- Calculator Container -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl">
+        <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl motion-safe:animate-[fadeIn_0.6s_ease] hover:-translate-y-1">
             <!-- Tabs Navigation -->
             <div class="flex flex-wrap justify-center gap-1 sm:gap-2 bg-gray-100 dark:bg-gray-700 py-2 px-1">
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 text-primary-600 dark:text-primary-400 border-primary-600 bg-primary-500/10" data-tab="sip" aria-selected="true">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 text-primary-600 dark:text-primary-400 border-primary-600 bg-primary-500/10 hover:bg-primary-500/20 transition duration-200 hover:-translate-y-0.5 active:scale-95" data-tab="sip" aria-selected="true">
                     <i class="fas fa-chart-line mr-2"></i>SIP Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="lumpsum" aria-selected="false">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 hover:-translate-y-0.5 active:scale-95" data-tab="lumpsum" aria-selected="false">
                     <i class="fas fa-coins mr-2"></i>Lumpsum Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="gst" aria-selected="false">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 hover:-translate-y-0.5 active:scale-95" data-tab="gst" aria-selected="false">
                     <i class="fas fa-percent mr-2"></i>GST Calculator
                 </button>
-                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-600/50" data-tab="emi" aria-selected="false">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 hover:-translate-y-0.5 active:scale-95" data-tab="emi" aria-selected="false">
                     <i class="fas fa-credit-card mr-2"></i>EMI Calculator
                 </button>
             </div>
@@ -143,13 +143,13 @@
                                 <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="sip-rate-range">
                             </div>
                             
-                            <button id="calculate-sip" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
+                            <button id="calculate-sip" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
                                 Calculate SIP
                             </button>
                         </div>
                         
                         <div>
-                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease]">
+                            <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-200 rounded-xl p-6 h-full animate-[fadeIn_0.5s_ease] transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
                                 <h3 class="text-xl font-semibold mb-4 text-center">SIP Results</h3>
                                 <div class="space-y-4">
                                     <div>
@@ -207,7 +207,7 @@
                                 <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="lumpsum-rate-range">
                             </div>
                             
-                            <button id="calculate-lumpsum" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
+                            <button id="calculate-lumpsum" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
                                 Calculate Lumpsum
                             </button>
                         </div>
@@ -264,12 +264,12 @@
                             <div class="mb-5">
                                 <label class="block mb-2 font-medium">Calculation Type</label>
                                 <div class="flex rounded-lg overflow-hidden">
-                                    <button id="gst-add" aria-pressed="true" class="flex-1 py-3 rounded-none rounded-l-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">Add GST</button>
-                                    <button id="gst-remove" aria-pressed="false" class="flex-1 py-3 rounded-none rounded-r-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Remove GST</button>
+                                    <button id="gst-add" aria-pressed="true" class="flex-1 py-3 rounded-none rounded-l-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-400/60">Add GST</button>
+                                    <button id="gst-remove" aria-pressed="false" class="flex-1 py-3 rounded-none rounded-r-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-primary-400/40">Remove GST</button>
                                 </div>
                             </div>
                             
-                            <button id="calculate-gst" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
+                            <button id="calculate-gst" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
                                 Calculate GST
                             </button>
                         </div>
@@ -333,7 +333,7 @@
                                 <input type="range" min="1" max="30" step="0.5" value="20" class="w-full mt-2 range-slider" id="emi-tenure-range">
                             </div>
                             
-                            <button id="calculate-emi" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl">
+                            <button id="calculate-emi" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
                                 Calculate EMI
                             </button>
                         </div>
@@ -364,6 +364,23 @@
                 </div>
             </div>
         </div>
+
+        <!-- About Section -->
+        <section id="about" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease]">
+            <h2 class="text-2xl font-bold mb-3">About</h2>
+            <p class="text-gray-700 dark:text-gray-300">
+                SmartFinTools is a simple, modern financial calculator suite. Quickly estimate SIP growth, lumpsum returns, GST amounts, and loan EMIs with clean visuals and intuitive controls.
+            </p>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease]">
+            <h2 class="text-2xl font-bold mb-3">Contact</h2>
+            <div class="space-y-1 text-gray-700 dark:text-gray-300">
+                <p><span class="font-semibold">Name:</span> Shivam Prakash</p>
+                <p><span class="font-semibold">Email:</span> <a class="text-primary-600 dark:text-primary-400 hover:underline" href="mailto:shivam.prakash@duck.com">shivam.prakash@duck.com</a></p>
+            </div>
+        </section>
 
         <!-- Footer -->
         <footer class="py-8 border-t border-gray-200 dark:border-gray-700">

@@ -29,12 +29,12 @@ document.querySelectorAll('.tab-btn').forEach(button => {
         // Update active tab styles and aria
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.setAttribute('aria-selected', 'false');
-            btn.classList.remove('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400');
-            btn.classList.add('border-transparent', 'text-gray-700', 'dark:text-gray-200');
+            btn.classList.remove('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400', 'hover:bg-primary-500/20');
+            btn.classList.add('border-transparent', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-200', 'dark:hover:bg-gray-600');
         });
         button.setAttribute('aria-selected', 'true');
-        button.classList.add('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400');
-        button.classList.remove('border-transparent', 'text-gray-700', 'dark:text-gray-200');
+        button.classList.add('border-primary-600', 'bg-primary-500/10', 'text-primary-600', 'dark:text-primary-400', 'hover:bg-primary-500/20');
+        button.classList.remove('border-transparent', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-200', 'dark:hover:bg-gray-600');
 
         // Show selected calculator
         const tabName = button.getAttribute('data-tab');

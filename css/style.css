@@ -1,5 +1,7 @@
 /* Custom styles for SmartFinTools */
 
+html { scroll-behavior: smooth; }
+
 .range-slider {
     -webkit-appearance: none;
     appearance: none;
