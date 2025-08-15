@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFinTools - Financial Calculators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        },
+                        secondary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center py-6 mb-8 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center mb-4 md:mb-0">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mr-3">
+                    <i class="fas fa-calculator text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">Smart<span class="text-primary-600 dark:text-primary-400">FinTools</span></h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">Home</a>
+                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">About</a>
+                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition">Contact</a>
+                </nav>
+                
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                
+                <button class="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+                Smart Financial Calculators
+            </h1>
+            <p class="max-w-2xl mx-auto text-gray-600 dark:text-gray-400">
+                Easily calculate SIP returns, Lumpsum investments, GST amounts, and EMI payments with our intuitive financial tools.
+            </p>
+        </section>
+
+        <!-- Calculator Container -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl">
+            <!-- Tabs Navigation -->
+            <div class="flex flex-wrap justify-center gap-1 sm:gap-2 bg-gray-100 dark:bg-gray-700 py-2 px-1">
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg active" data-tab="sip">
+                    <i class="fas fa-chart-line mr-2"></i>SIP Calculator
+                </button>
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="lumpsum">
+                    <i class="fas fa-coins mr-2"></i>Lumpsum Calculator
+                </button>
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="gst">
+                    <i class="fas fa-percent mr-2"></i>GST Calculator
+                </button>
+                <button class="tab-btn py-3 px-4 text-sm sm:text-base font-medium rounded-lg" data-tab="emi">
+                    <i class="fas fa-credit-card mr-2"></i>EMI Calculator
+                </button>
+            </div>
+
+            <!-- Calculator Content -->
+            <div class="p-4 sm:p-6">
+                <!-- SIP Calculator -->
+                <div id="sip-calculator" class="calculator-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Monthly Investment (₹)</label>
+                                <input type="number" id="sip-amount" class="input-field" placeholder="e.g. 5000" min="100" max="1000000" step="100" value="5000">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>₹100</span>
+                                    <span>₹1,000,000</span>
+                                </div>
+                                <input type="range" min="100" max="1000000" step="100" value="5000" class="w-full mt-2 range-slider" id="sip-amount-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Investment Period (Years)</label>
+                                <input type="number" id="sip-period" class="input-field" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1 Year</span>
+                                    <span>40 Years</span>
+                                </div>
+                                <input type="range" min="1" max="40" step="0.5" value="10" class="w-full mt-2 range-slider" id="sip-period-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
+                                <input type="number" id="sip-rate" class="input-field" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1%</span>
+                                    <span>30%</span>
+                                </div>
+                                <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="sip-rate-range">
+                            </div>
+                            
+                            <button id="calculate-sip" class="w-full btn-primary">
+                                Calculate SIP
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div class="result-card">
+                                <h3 class="text-xl font-semibold mb-4 text-center">SIP Results</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Invested Amount</p>
+                                        <p id="sip-invested" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Estimated Returns</p>
+                                        <p id="sip-returns" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Total Value</p>
+                                        <p id="sip-total" class="result-value">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">The power of compounding helps your money grow exponentially over time.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lumpsum Calculator -->
+                <div id="lumpsum-calculator" class="calculator-section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Investment Amount (₹)</label>
+                                <input type="number" id="lumpsum-amount" class="input-field" placeholder="e.g. 100000" min="1000" max="10000000" step="1000" value="100000">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>₹1,000</span>
+                                    <span>₹10,000,000</span>
+                                </div>
+                                <input type="range" min="1000" max="10000000" step="1000" value="100000" class="w-full mt-2 range-slider" id="lumpsum-amount-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Investment Period (Years)</label>
+                                <input type="number" id="lumpsum-period" class="input-field" placeholder="e.g. 10" min="1" max="40" step="0.5" value="10">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1 Year</span>
+                                    <span>40 Years</span>
+                                </div>
+                                <input type="range" min="1" max="40" step="0.5" value="10" class="w-full mt-2 range-slider" id="lumpsum-period-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
+                                <input type="number" id="lumpsum-rate" class="input-field" placeholder="e.g. 12" min="1" max="30" step="0.1" value="12">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1%</span>
+                                    <span>30%</span>
+                                </div>
+                                <input type="range" min="1" max="30" step="0.1" value="12" class="w-full mt-2 range-slider" id="lumpsum-rate-range">
+                            </div>
+                            
+                            <button id="calculate-lumpsum" class="w-full btn-primary">
+                                Calculate Lumpsum
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div class="result-card">
+                                <h3 class="text-xl font-semibold mb-4 text-center">Lumpsum Results</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Invested Amount</p>
+                                        <p id="lumpsum-invested" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Estimated Returns</p>
+                                        <p id="lumpsum-returns" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Total Value</p>
+                                        <p id="lumpsum-total" class="result-value">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Lumpsum investments can yield significant returns with compounding over time.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GST Calculator -->
+                <div id="gst-calculator" class="calculator-section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Amount (₹)</label>
+                                <input type="number" id="gst-amount" class="input-field" placeholder="e.g. 10000" min="1" max="10000000" step="0.01" value="10000">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>₹1</span>
+                                    <span>₹10,000,000</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">GST Rate (%)</label>
+                                <div class="grid grid-cols-4 gap-2 mb-3">
+                                    <button data-rate="5" class="gst-rate-btn">5%</button>
+                                    <button data-rate="12" class="gst-rate-btn">12%</button>
+                                    <button data-rate="18" class="gst-rate-btn active">18%</button>
+                                    <button data-rate="28" class="gst-rate-btn">28%</button>
+                                </div>
+                                <input type="number" id="gst-rate" class="input-field" min="0" max="100" step="0.1" value="18">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Calculation Type</label>
+                                <div class="flex rounded-lg overflow-hidden">
+                                    <button id="gst-add" class="flex-1 py-3 btn-primary rounded-none rounded-l-lg">Add GST</button>
+                                    <button id="gst-remove" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-none rounded-r-lg">Remove GST</button>
+                                </div>
+                            </div>
+                            
+                            <button id="calculate-gst" class="w-full btn-primary">
+                                Calculate GST
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div class="result-card">
+                                <h3 class="text-xl font-semibold mb-4 text-center">GST Results</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Original Amount</p>
+                                        <p id="gst-original" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">GST Amount</p>
+                                        <p id="gst-tax" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Net Amount</p>
+                                        <p id="gst-net" class="result-value">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">GST (Goods and Services Tax) is a comprehensive indirect tax on the supply of goods and services.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EMI Calculator -->
+                <div id="emi-calculator" class="calculator-section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Loan Amount (₹)</label>
+                                <input type="number" id="emi-amount" class="input-field" placeholder="e.g. 500000" min="10000" max="50000000" step="1000" value="500000">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>₹10,000</span>
+                                    <span>₹50,000,000</span>
+                                </div>
+                                <input type="range" min="10000" max="50000000" step="1000" value="500000" class="w-full mt-2 range-slider" id="emi-amount-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Interest Rate (%)</label>
+                                <input type="number" id="emi-rate" class="input-field" placeholder="e.g. 8.5" min="1" max="30" step="0.01" value="8.5">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1%</span>
+                                    <span>30%</span>
+                                </div>
+                                <input type="range" min="1" max="30" step="0.1" value="8.5" class="w-full mt-2 range-slider" id="emi-rate-range">
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="block mb-2 font-medium">Loan Tenure (Years)</label>
+                                <input type="number" id="emi-tenure" class="input-field" placeholder="e.g. 20" min="1" max="30" step="0.5" value="20">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>1 Year</span>
+                                    <span>30 Years</span>
+                                </div>
+                                <input type="range" min="1" max="30" step="0.5" value="20" class="w-full mt-2 range-slider" id="emi-tenure-range">
+                            </div>
+                            
+                            <button id="calculate-emi" class="w-full btn-primary">
+                                Calculate EMI
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div class="result-card">
+                                <h3 class="text-xl font-semibold mb-4 text-center">EMI Results</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Monthly EMI</p>
+                                        <p id="emi-monthly" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Total Interest</p>
+                                        <p id="emi-interest" class="result-value">₹0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 dark:text-gray-400">Total Payment</p>
+                                        <p id="emi-total" class="result-value">₹0</p>
+                                    </div>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">EMI (Equated Monthly Installment) includes both principal and interest components.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="py-8 border-t border-gray-200 dark:border-gray-700">
+            <div class="text-center">
+                <p class="text-gray-600 dark:text-gray-400 mb-4">© 2025 SmartFinTools. All rights reserved.</p>
+                <div class="flex justify-center space-x-4">
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
