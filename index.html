@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartFinTools - Financial Calculators</title>
+    <!-- PWA: theme color and capabilities -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.webmanifest">
+    <!-- Icons (generated via ImageMagick): -->
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icons/favicon-16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="images/icons/icon-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon-180.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -433,5 +445,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
+    <script>
+      // Register Service Worker as early as possible after scripts load
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(console.error);
+        });
+      }
+    </script>
 </body>
 </html>
