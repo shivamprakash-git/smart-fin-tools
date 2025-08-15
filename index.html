@@ -84,6 +84,19 @@
             </div>
         </header>
 
+        <!-- Market Ticker (Indian Indices) -->
+        <section id="market-ticker" class="mb-4">
+            <div id="market-ticker-viewport" class="relative overflow-hidden rounded-lg border bg-white text-gray-800 border-gray-200 shadow-sm dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-3 px-2 py-1">
+                    <span class="text-[10px] md:text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-secondary-100 text-secondary-700 dark:bg-secondary-900/40 dark:text-secondary-300">Market Pulse (India)</span>
+                    <div class="overflow-hidden flex-1">
+                        <div id="market-ticker-track" class="select-text flex gap-4 items-center whitespace-nowrap px-2 py-1 will-change-transform"></div>
+                    </div>
+                    <span id="market-ticker-meta" class="ml-auto text-[10px] md:text-xs text-gray-500 dark:text-gray-400">Fetching…</span>
+                </div>
+            </div>
+        </section>
+
         <!-- Mobile Menu -->
         <nav id="mobile-menu" class="md:hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6 -mt-4 hidden">
             <a href="#home" class="block py-2 px-2 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200 ease-out hover:translate-x-2">Home</a>
@@ -445,6 +458,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/marketTicker.js"></script>
     <script>
       // Register Service Worker as early as possible after scripts load
       if ('serviceWorker' in navigator) {
