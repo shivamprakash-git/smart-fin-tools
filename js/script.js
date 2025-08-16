@@ -24,6 +24,13 @@ function setupInputFocusScroll() {
         return (header ? header.getBoundingClientRect().height : 96) + 8;
     };
 
+    // Keyboard height helper (when visualViewport is available)
+    const getKeyboardHeight = () => {
+        if (!vv) return 0;
+        const kb = (window.innerHeight - vv.height - (vv.offsetTop || 0));
+        return Math.max(0, kb);
+    };
+
     let activeEl = null;
     let scheduleTimer = null;
 
@@ -66,12 +73,34 @@ function setupInputFocusScroll() {
         const el = e.target;
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
-        // Exclude the big editor textarea to avoid bouncy/double scroll when keyboard appears
+        activeEl = el;
+
+        // Tailored handling for large editor to avoid bounce on mobile
         if (el.id === 'editor-area') {
-            activeEl = null;
+            clearTimeout(scheduleTimer);
+            scheduleTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    const rect = el.getBoundingClientRect();
+                    const viewportHeight = vv ? vv.height : window.innerHeight;
+                    const viewportTopOffset = vv ? vv.offsetTop : 0;
+                    const topThreshold = getHeaderOffset();
+                    const bottomThreshold = (viewportHeight + viewportTopOffset) - 12; // small bottom padding
+
+                    const isAbove = (rect.top - viewportTopOffset) < topThreshold;
+                    const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
+
+                    if (isBelow) {
+                        el.scrollIntoView({ block: 'center', behavior: prefersReduce ? 'auto' : 'smooth' });
+                    } else if (isAbove) {
+                        const target = window.scrollY + rect.top - topThreshold;
+                        window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
+                    }
+                });
+            }, isIOS ? 360 : 160);
             return;
         }
-        activeEl = el;
+
+        // Default handling for other inputs
         scheduleScroll();
     };
 
@@ -88,11 +117,26 @@ function setupInputFocusScroll() {
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
+        // Maintain a padding-bottom so content can scroll above the keyboard reliably
+        const applyKeyboardPadding = () => {
+            const kb = getKeyboardHeight();
+            document.body.style.paddingBottom = kb > 0 ? (kb + 8) + 'px' : '';
+        };
+        applyKeyboardPadding();
+
         let vvTimer = null;
         const onVVChange = () => {
+            applyKeyboardPadding();
             if (!activeEl) return;
             clearTimeout(vvTimer);
-            vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
+            vvTimer = setTimeout(() => {
+                // For editor, re-run tailored logic; for others, scheduleScroll
+                if (activeEl && activeEl.id === 'editor-area') {
+                    activeEl.scrollIntoView({ block: 'center', behavior: prefersReduce ? 'auto' : 'smooth' });
+                } else {
+                    scheduleScroll();
+                }
+            }, isIOS ? 150 : 75);
         };
         vv.addEventListener('resize', onVVChange);
         vv.addEventListener('scroll', onVVChange);
