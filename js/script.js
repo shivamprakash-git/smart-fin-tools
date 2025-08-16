@@ -862,12 +862,16 @@ function setupEMICalculator() {
         let remaining = amount;
         let cumPrincipal = 0;
         let cumInterest = 0;
+        let crossoverMonth = null; // first month where principal portion >= interest portion
         for (let m = 1; m <= months; m++) {
             const interestPortion = remaining * monthlyRate;
             const principalPortion = emi - interestPortion;
             cumInterest += interestPortion;
             cumPrincipal += principalPortion;
             remaining -= principalPortion;
+            if (crossoverMonth === null && principalPortion >= interestPortion) {
+                crossoverMonth = m;
+            }
             if (m % 12 === 0) {
                 const y = m / 12;
                 labels.push(`Y${y}`);
@@ -875,16 +879,19 @@ function setupEMICalculator() {
                 returnsSeries.push(Math.max(0, cumInterest));
             }
         }
-        if (labels.length === 0) {
-            labels.push('Y1');
-            investedSeries.push(Math.max(0, amount));
-            returnsSeries.push(Math.max(0, totalInterest));
+        // If tenure is not a whole number of years, add the final partial year point
+        if (months % 12 !== 0) {
+            const y = months / 12;
+            const yLabel = Number.isInteger(y) ? `Y${y}` : `Y${y.toFixed(1)}`;
+            labels.push(yLabel);
+            investedSeries.push(Math.max(0, cumPrincipal));
+            returnsSeries.push(Math.max(0, cumInterest));
         }
         updateCharts({
             labels,
             investedSeries,
             returnsSeries,
-            lineLabels: ['Principal', 'Interest'],
+            lineLabels: ['Principal Paid', 'Interest Paid'],
             lineVisibility: [true, true],
             pieLabels: ['Principal', 'Interest'],
             pieData: [amount, Math.max(0, totalInterest)],
@@ -896,6 +903,42 @@ function setupEMICalculator() {
                 breakdownBadge: 'Principal vs Interest'
             }
         });
+
+        // Highlight the crossover point on both lines (nearest label index)
+        if (typeof Chart !== 'undefined' && lineChart) {
+            // Determine index in labels to highlight based on crossoverMonth
+            if (crossoverMonth !== null && labels.length > 0) {
+                let idx;
+                const yearsCompleted = Math.floor(crossoverMonth / 12);
+                if (crossoverMonth % 12 === 0) {
+                    idx = Math.max(0, yearsCompleted - 1); // exactly at a year boundary
+                } else {
+                    idx = yearsCompleted; // falls within the next (partial) year bucket
+                }
+                if (idx >= labels.length) idx = labels.length - 1;
+
+                const defaultRadius = 2;
+                const defaultHover = 5;
+                const highlightRadius = 6;
+                const highlightHover = 8;
+                const makeArray = (len, fillRadius, highlightIndex, highlightVal) => {
+                    const arr = new Array(len).fill(fillRadius);
+                    if (highlightIndex >= 0 && highlightIndex < len) arr[highlightIndex] = highlightVal;
+                    return arr;
+                };
+
+                // Ensure arrays exist and set for both datasets
+                lineChart.data.datasets[0].pointRadius = makeArray(labels.length, defaultRadius, idx, highlightRadius);
+                lineChart.data.datasets[0].pointHoverRadius = makeArray(labels.length, defaultHover, idx, highlightHover);
+                lineChart.data.datasets[0].pointStyle = makeArray(labels.length, 'circle', idx, 'star');
+
+                lineChart.data.datasets[1].pointRadius = makeArray(labels.length, defaultRadius, idx, highlightRadius);
+                lineChart.data.datasets[1].pointHoverRadius = makeArray(labels.length, defaultHover, idx, highlightHover);
+                lineChart.data.datasets[1].pointStyle = makeArray(labels.length, 'circle', idx, 'star');
+
+                lineChart.update();
+            }
+        }
     }
     
     // Initial calculation
