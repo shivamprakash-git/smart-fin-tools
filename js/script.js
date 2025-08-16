@@ -25,11 +25,13 @@ function setupInputFocusScroll() {
     };
 
     let activeEl = null;
+    let activeIsEditor = false;
     let scheduleTimer = null;
 
     const scheduleScroll = () => {
         if (!activeEl) return;
         clearTimeout(scheduleTimer);
+        const delay = isIOS ? (activeIsEditor ? 350 : 280) : (activeIsEditor ? 160 : 120);
         scheduleTimer = setTimeout(() => {
             // Use rAF to read/layout just-in-time
             requestAnimationFrame(() => {
@@ -38,7 +40,10 @@ function setupInputFocusScroll() {
                 const viewportHeight = vv ? vv.height : window.innerHeight;
                 const viewportTopOffset = vv ? vv.offsetTop : 0;
                 const topThreshold = getHeaderOffset();
-                const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
+                const isEditor = activeEl && activeEl.id === 'editor-area';
+                // Give the editor a larger safe area above the keyboard
+                const bottomPad = isEditor ? 48 : 20;
+                const bottomThreshold = (viewportHeight + viewportTopOffset) - bottomPad;
 
                 const isAbove = (rect.top - viewportTopOffset) < topThreshold;
                 const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
@@ -46,26 +51,29 @@ function setupInputFocusScroll() {
                 if (!isAbove && !isBelow) return; // Already comfortably visible
 
                 let target;
-                const isEditor = activeEl && activeEl.id === 'editor-area';
                 if (isAbove) {
                     // Nudge just enough to clear the header
                     target = window.scrollY + rect.top - topThreshold;
                 } else {
                     // Element is below the comfortable area (likely behind the keyboard)
                     const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
+                    const topAlign = window.scrollY + rect.top - (topThreshold + 8);
                     const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
-                    // For the editor textarea, avoid aggressive upward scrolling
+                    // For the editor textarea, align its top just under the header for maximum visibility.
+                    // For others, keep the gentler minimal/one-third mix.
                     target = isEditor
-                        ? Math.max(0, minimalTop)
+                        ? Math.max(0, topAlign)
                         : Math.max(0, Math.min(minimalTop, oneThirdTop));
                 }
 
                 const current = window.scrollY;
                 if (Math.abs(current - target) > 1) {
-                    window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
+                    // Use instant scroll for editor to avoid over-scrolling animations on mobile
+                    const behavior = (prefersReduce || isEditor) ? 'auto' : 'smooth';
+                    window.scrollTo({ top: target, behavior });
                 }
             });
-        }, isIOS ? 280 : 120);
+        }, delay);
     };
 
     const onFocusIn = (e) => {
@@ -73,6 +81,11 @@ function setupInputFocusScroll() {
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
         activeEl = el;
+        activeIsEditor = el.id === 'editor-area';
+        // Try to prevent native immediate scroll jump for the editor, we'll handle scrolling ourselves.
+        if (activeIsEditor) {
+            try { el.focus({ preventScroll: true }); } catch {}
+        }
         scheduleScroll();
     };
 
