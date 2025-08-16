@@ -18,19 +18,6 @@ function setupInputFocusScroll() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const vv = window.visualViewport || null;
 
-    // Add bottom padding when keyboard is open so the page can scroll above it
-    const setKBPadding = (el) => {
-        try {
-            if (!vv) return;
-            const kb = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
-            const extra = (el && el.tagName === 'TEXTAREA') ? 80 : 50; // a little breathing room
-            document.body.style.paddingBottom = (kb > 0 ? (kb + extra) : 0) + 'px';
-        } catch {}
-    };
-    const clearKBPadding = () => {
-        try { document.body.style.paddingBottom = ''; } catch {}
-    };
-
     const getHeaderOffset = () => {
         const header = document.querySelector('header');
         // Add small padding for comfort
@@ -50,38 +37,30 @@ function setupInputFocusScroll() {
                 const rect = activeEl.getBoundingClientRect();
                 const viewportHeight = vv ? vv.height : window.innerHeight;
                 const viewportTopOffset = vv ? vv.offsetTop : 0;
-                const isTextarea = activeEl.tagName === 'TEXTAREA';
-
-                // Comfort band: widen for large controls like textarea
                 const topThreshold = getHeaderOffset();
-                const bottomPadding = isTextarea ? 60 : 20;
-                const bottomThreshold = (viewportHeight + viewportTopOffset) - bottomPadding;
+                const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
 
                 const isAbove = (rect.top - viewportTopOffset) < topThreshold;
                 const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
 
-                // If already comfortably visible, do nothing
-                if (!isAbove && !isBelow) return;
+                if (!isAbove && !isBelow) return; // Already comfortably visible
 
                 let target;
+                const isEditor = activeEl && activeEl.id === 'editor-area';
                 if (isAbove) {
-                    // Align just below the header
+                    // Nudge just enough to clear the header
                     target = window.scrollY + rect.top - topThreshold;
                 } else {
-                    // Keep some content visible above for context
+                    // Element is below the comfortable area (likely behind the keyboard)
                     const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
-                    const contextualTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / (isTextarea ? 2.5 : 3));
-                    target = Math.max(0, Math.min(minimalTop, contextualTop));
+                    const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
+                    // For the editor textarea, avoid aggressive upward scrolling
+                    target = isEditor
+                        ? Math.max(0, minimalTop)
+                        : Math.max(0, Math.min(minimalTop, oneThirdTop));
                 }
 
-                // Clamp large jumps for textareas to avoid overshoot on mobile keyboard resize
                 const current = window.scrollY;
-                if (isTextarea) {
-                    const maxDelta = viewportHeight * 0.6;
-                    if (target > current + maxDelta) target = current + maxDelta;
-                    if (target < Math.max(0, current - maxDelta)) target = Math.max(0, current - maxDelta);
-                }
-
                 if (Math.abs(current - target) > 1) {
                     window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
                 }
@@ -94,7 +73,6 @@ function setupInputFocusScroll() {
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
         activeEl = el;
-        setKBPadding(activeEl);
         scheduleScroll();
     };
 
@@ -103,7 +81,6 @@ function setupInputFocusScroll() {
             activeEl = null;
             clearTimeout(scheduleTimer);
             scheduleTimer = null;
-            clearKBPadding();
         }
     };
 
@@ -116,8 +93,6 @@ function setupInputFocusScroll() {
         const onVVChange = () => {
             if (!activeEl) return;
             clearTimeout(vvTimer);
-            // Update padding to actual keyboard height and then re-position
-            setKBPadding(activeEl);
             vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
         };
         vv.addEventListener('resize', onVVChange);
