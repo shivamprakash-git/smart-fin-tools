@@ -37,24 +37,38 @@ function setupInputFocusScroll() {
                 const rect = activeEl.getBoundingClientRect();
                 const viewportHeight = vv ? vv.height : window.innerHeight;
                 const viewportTopOffset = vv ? vv.offsetTop : 0;
+                const isTextarea = activeEl.tagName === 'TEXTAREA';
+
+                // Comfort band: widen for large controls like textarea
                 const topThreshold = getHeaderOffset();
-                const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
+                const bottomPadding = isTextarea ? 60 : 20;
+                const bottomThreshold = (viewportHeight + viewportTopOffset) - bottomPadding;
 
                 const isAbove = (rect.top - viewportTopOffset) < topThreshold;
                 const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
 
-                if (!isAbove && !isBelow) return; // Already comfortably visible
+                // If already comfortably visible, do nothing
+                if (!isAbove && !isBelow) return;
 
                 let target;
                 if (isAbove) {
+                    // Align just below the header
                     target = window.scrollY + rect.top - topThreshold;
                 } else {
+                    // Keep some content visible above for context
                     const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
-                    const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
-                    target = Math.max(0, Math.min(minimalTop, oneThirdTop));
+                    const contextualTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / (isTextarea ? 2.5 : 3));
+                    target = Math.max(0, Math.min(minimalTop, contextualTop));
                 }
 
+                // Clamp large jumps for textareas to avoid overshoot on mobile keyboard resize
                 const current = window.scrollY;
+                if (isTextarea) {
+                    const maxDelta = viewportHeight * 0.6;
+                    if (target > current + maxDelta) target = current + maxDelta;
+                    if (target < Math.max(0, current - maxDelta)) target = Math.max(0, current - maxDelta);
+                }
+
                 if (Math.abs(current - target) > 1) {
                     window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
                 }
