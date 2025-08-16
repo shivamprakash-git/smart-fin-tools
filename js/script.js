@@ -17,6 +17,10 @@ function setupInputFocusScroll() {
     const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const vv = window.visualViewport || null;
+    const editorEl = document.getElementById('editor-area');
+    let editorActive = false;
+    let editorEnsureTimer = null;
+    let editorEnsuredOnce = false;
 
     const getHeaderOffset = () => {
         const header = document.querySelector('header');
@@ -66,9 +70,39 @@ function setupInputFocusScroll() {
         const el = e.target;
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
-        // Exclude the big editor textarea to avoid bouncy/double scroll when keyboard appears
+        // Special-case the big editor textarea: perform a one-time visibility fix after keyboard shows
         if (el.id === 'editor-area') {
-            activeEl = null;
+            editorActive = true;
+            editorEnsuredOnce = false;
+            clearTimeout(editorEnsureTimer);
+            editorEnsureTimer = setTimeout(() => {
+                // Ensure visible once (after keyboard likely adjusted viewport)
+                const targetEl = editorEl;
+                if (!targetEl) return;
+                const rect = targetEl.getBoundingClientRect();
+                const viewportHeight = vv ? vv.height : window.innerHeight;
+                const viewportTopOffset = vv ? vv.offsetTop : 0;
+                const topThreshold = getHeaderOffset();
+                const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
+                const isAbove = (rect.top - viewportTopOffset) < topThreshold;
+                const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
+                if (isAbove || isBelow) {
+                    // Scroll just enough to bring it comfortably into view (no smooth to avoid bounce)
+                    let target;
+                    if (isAbove) {
+                        target = window.scrollY + rect.top - topThreshold;
+                    } else {
+                        const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
+                        const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
+                        target = Math.max(0, Math.min(minimalTop, oneThirdTop));
+                    }
+                    if (Math.abs(window.scrollY - target) > 1) {
+                        window.scrollTo({ top: target, behavior: 'auto' });
+                    }
+                }
+                editorEnsuredOnce = true;
+            }, isIOS ? 380 : 180);
+            activeEl = null; // don't use generic handler for editor
             return;
         }
         activeEl = el;
@@ -90,9 +124,41 @@ function setupInputFocusScroll() {
     if (vv) {
         let vvTimer = null;
         const onVVChange = () => {
-            if (!activeEl) return;
-            clearTimeout(vvTimer);
-            vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
+            // If a non-editor input is active, keep existing behavior
+            if (activeEl) {
+                clearTimeout(vvTimer);
+                vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
+                return;
+            }
+            // If editor is active and we haven't ensured visibility yet, do a single adjust
+            if (editorActive && !editorEnsuredOnce) {
+                clearTimeout(vvTimer);
+                vvTimer = setTimeout(() => {
+                    const targetEl = editorEl;
+                    if (!targetEl) return;
+                    const rect = targetEl.getBoundingClientRect();
+                    const viewportHeight = vv ? vv.height : window.innerHeight;
+                    const viewportTopOffset = vv ? vv.offsetTop : 0;
+                    const topThreshold = getHeaderOffset();
+                    const bottomThreshold = (viewportHeight + viewportTopOffset) - 20;
+                    const isAbove = (rect.top - viewportTopOffset) < topThreshold;
+                    const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
+                    if (isAbove || isBelow) {
+                        let target;
+                        if (isAbove) {
+                            target = window.scrollY + rect.top - topThreshold;
+                        } else {
+                            const minimalTop = window.scrollY + (rect.bottom - bottomThreshold);
+                            const oneThirdTop = window.scrollY + (rect.top - viewportTopOffset) - (viewportHeight / 3);
+                            target = Math.max(0, Math.min(minimalTop, oneThirdTop));
+                        }
+                        if (Math.abs(window.scrollY - target) > 1) {
+                            window.scrollTo({ top: target, behavior: 'auto' });
+                        }
+                    }
+                    editorEnsuredOnce = true;
+                }, isIOS ? 200 : 100);
+            }
         };
         vv.addEventListener('resize', onVVChange);
         vv.addEventListener('scroll', onVVChange);
