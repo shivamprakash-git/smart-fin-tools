@@ -197,6 +197,68 @@ function formatCurrencyOrInfinity(amount) {
     return formatCurrency(amount);
 }
 
+// Compact Indian-style formatter for very large values (for charts/tooltips)
+// Uses full unit names: Thousand, Lakh, Crore, Arab, Kharab, Neel, Padma, Shankh
+// Keeps output readable while using full names per request
+function formatIndianCompact(value, withCurrency = true) {
+    if (!isFinite(value)) return '∞';
+    const sign = value < 0 ? '-' : '';
+    const n = Math.abs(value);
+
+    // Thresholds (descending)
+    const units = [
+        { v: 1e17, s: 'Shankh' },
+        { v: 1e15, s: 'Padma'  },
+        { v: 1e13, s: 'Neel'   },
+        { v: 1e11, s: 'Kharab' },
+        { v: 1e9,  s: 'Arab'   },
+        { v: 1e7,  s: 'Crore'  },
+        { v: 1e5,  s: 'Lakh'   },
+        { v: 1e3,  s: 'Thousand' }
+    ];
+
+    let out;
+    for (const u of units) {
+        if (n >= u.v) {
+            out = (n / u.v);
+            break;
+        }
+    }
+    if (out === undefined) {
+        // For small values, keep 2 decimals and Indian grouping with full currency
+        const small = withCurrency ? formatCurrency(n) : n.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+        return sign + small;
+    }
+
+    // If the ratio itself is enormous (beyond top named unit coverage), avoid 'e' notation
+    let str;
+    if (out >= 1e9) {
+        // Use exponential then convert to mantissa × 10^exp
+        const expStr = out.toExponential(2); // e.g., 3.45e+12
+        const match = expStr.match(/([\d.]+)e\+?(\d+)/i);
+        if (match) {
+            const mantissa = match[1].replace(/\.00?$/,'');
+            const exp = match[2];
+            const unit = units.find(u => n >= u.v).s;
+            const prefix = withCurrency ? '₹' : '';
+            return `${sign}${prefix}${mantissa} × 10^${exp} ${unit}`;
+        }
+        // Fallback if parsing fails
+        str = out.toString();
+    } else {
+        // Format with up to 2 decimals, strip trailing zeros
+        str = out.toFixed(out >= 100 ? 0 : out >= 10 ? 1 : 2).replace(/\.00?$|0$/,'');
+    }
+
+    const unit = units.find(u => n >= u.v).s;
+    const prefix = withCurrency ? '₹' : '';
+    return `${sign}${prefix}${str} ${unit}`;
+}
+
+function formatCurrencyCompact(amount) {
+    return formatIndianCompact(amount, true);
+}
+
 // Validate number inputs
 function validateNumberInput(input, min, max) {
     let value = parseFloat(input.value);
@@ -273,22 +335,23 @@ function ensureCharts() {
                             label: function(ctx) {
                                 const dsLabel = ctx.dataset.label || '';
                                 const val = ctx.parsed.y;
-                                // Use existing formatter if available
-                                if (typeof formatCurrencyOrInfinity === 'function') {
-                                    return `${dsLabel}: ${formatCurrencyOrInfinity(val)}`;
-                                }
-                                try {
-                                    return `${dsLabel}: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(val)}`;
-                                } catch {
-                                    return `${dsLabel}: ${val}`;
-                                }
+                                return `${dsLabel}: ${formatCurrencyCompact(val)}`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' }, beginAtZero: true }
+                    y: {
+                        ticks: {
+                            color: '#94a3b8',
+                            maxTicksLimit: 6,
+                            callback: function(v) { return formatIndianCompact(v, true); }
+                        },
+                        grid: { color: 'rgba(148,163,184,0.15)' },
+                        beginAtZero: true,
+                        grace: '5%'
+                    }
                 }
             }
         });
@@ -307,7 +370,18 @@ function ensureCharts() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8' } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const label = ctx.label || ctx.dataset?.label || '';
+                                const val = Array.isArray(ctx.parsed) ? ctx.parsed[0] : ctx.parsed; // Chart.js v4 doughnut gives number
+                                return `${label}: ${formatCurrencyCompact(val)}`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
