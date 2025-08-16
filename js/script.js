@@ -18,6 +18,19 @@ function setupInputFocusScroll() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const vv = window.visualViewport || null;
 
+    // Add bottom padding when keyboard is open so the page can scroll above it
+    const setKBPadding = (el) => {
+        try {
+            if (!vv) return;
+            const kb = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+            const extra = (el && el.tagName === 'TEXTAREA') ? 80 : 50; // a little breathing room
+            document.body.style.paddingBottom = (kb > 0 ? (kb + extra) : 0) + 'px';
+        } catch {}
+    };
+    const clearKBPadding = () => {
+        try { document.body.style.paddingBottom = ''; } catch {}
+    };
+
     const getHeaderOffset = () => {
         const header = document.querySelector('header');
         // Add small padding for comfort
@@ -81,6 +94,7 @@ function setupInputFocusScroll() {
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
         activeEl = el;
+        setKBPadding(activeEl);
         scheduleScroll();
     };
 
@@ -89,6 +103,7 @@ function setupInputFocusScroll() {
             activeEl = null;
             clearTimeout(scheduleTimer);
             scheduleTimer = null;
+            clearKBPadding();
         }
     };
 
@@ -101,6 +116,8 @@ function setupInputFocusScroll() {
         const onVVChange = () => {
             if (!activeEl) return;
             clearTimeout(vvTimer);
+            // Update padding to actual keyboard height and then re-position
+            setKBPadding(activeEl);
             vvTimer = setTimeout(scheduleScroll, isIOS ? 150 : 75);
         };
         vv.addEventListener('resize', onVVChange);
