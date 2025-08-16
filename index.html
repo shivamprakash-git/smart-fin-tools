@@ -129,6 +129,18 @@
             </p>
         </section>
 
+        <!-- Global Slider Toggle (off by default) -->
+        <div id="slider-toggle-container" class="max-w-4xl mx-auto -mt-4 mb-4 flex items-center justify-center gap-3 motion-safe:animate-[fadeIn_0.6s_ease] invisible">
+            <span class="text-sm text-gray-700 dark:text-gray-300">Disable sliders</span>
+            <label class="inline-flex items-center cursor-pointer select-none">
+                <input type="checkbox" id="slider-global-toggle" class="sr-only">
+                <span id="slider-toggle-track" class="relative inline-block w-11 h-6 rounded-full bg-gray-300 dark:bg-gray-700">
+                    <span id="slider-toggle-knob" class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow translate-x-0"></span>
+                </span>
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Enable sliders</span>
+            </label>
+        </div>
+
         <!-- Calculator Container -->
         <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl motion-safe:animate-[fadeIn_0.6s_ease] hover:-translate-y-1">
             <!-- Tabs Navigation -->

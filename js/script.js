@@ -154,6 +154,64 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
+// Global slider enable/disable toggle (off by default)
+function setupSliderGlobalToggle() {
+    const toggle = document.getElementById('slider-global-toggle');
+    const getSliders = () => document.querySelectorAll('.range-slider');
+    const track = document.getElementById('slider-toggle-track');
+    const knob = document.getElementById('slider-toggle-knob');
+    const container = document.getElementById('slider-toggle-container');
+
+    const setNoTransition = (disable) => {
+        if (track) track.classList.toggle('transition-none', disable);
+        if (knob) knob.classList.toggle('transition-none', disable);
+    };
+
+    const applyState = (enabled) => {
+        getSliders().forEach(sl => {
+            sl.disabled = !enabled;
+            sl.setAttribute('aria-disabled', (!enabled).toString());
+            sl.classList.toggle('opacity-50', !enabled);
+            sl.classList.toggle('cursor-not-allowed', !enabled);
+            sl.classList.toggle('pointer-events-none', !enabled);
+        });
+        // Animate/Style switch
+        if (track) {
+            track.classList.toggle('bg-primary-600', enabled);
+            if (!enabled) {
+                track.classList.add('bg-gray-300');
+                track.classList.add('dark:bg-gray-700');
+            } else {
+                track.classList.remove('bg-gray-300');
+                track.classList.remove('dark:bg-gray-700');
+            }
+        }
+        if (knob) {
+            knob.classList.toggle('translate-x-5', enabled);
+            knob.classList.toggle('translate-x-0', !enabled);
+        }
+        try { localStorage.setItem('sliders-enabled', enabled ? '1' : '0'); } catch (e) {}
+    };
+
+    // Default: disabled unless explicitly enabled previously
+    const saved = (() => { try { return localStorage.getItem('sliders-enabled'); } catch (e) { return null; } })();
+    const initialEnabled = saved === '1';
+
+    if (toggle) {
+        toggle.checked = initialEnabled;
+        // Apply initial state without animating
+        setNoTransition(true);
+        applyState(initialEnabled);
+        if (container) container.classList.remove('invisible');
+        requestAnimationFrame(() => setNoTransition(false));
+        toggle.addEventListener('change', () => applyState(toggle.checked));
+    } else {
+        // Safety: if toggle missing, keep sliders disabled by default
+        applyState(false);
+        if (container) container.classList.remove('invisible');
+    }
+}
+
 // Tab Switching (Tailwind utilities + ARIA)
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.addEventListener('click', () => {
@@ -853,6 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLumpsumCalculator();
     setupGSTCalculator();
     setupEMICalculator();
+    setupSliderGlobalToggle();
     setupInputFocusScroll();
 
     // Ensure initial charts reflect the active tab's values
