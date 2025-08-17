@@ -91,23 +91,86 @@ function setupBasicCalculator() {
   if (!root) return;
   const display = document.getElementById('calc-display');
   const history = document.getElementById('calc-history');
+  const caretViz = document.getElementById('calc-caret-display');
+  const caretPosEl = document.getElementById('calc-caret-pos');
   let lastAns = 0;
+  let caretPos = 0; // internal caret for read-only display
+
+  const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+
+  // Measure helper to check if a value would overflow the display box
+  let measureEl;
+  function ensureMeasure() {
+    if (measureEl || !display) return;
+    measureEl = document.createElement('span');
+    // Keep offscreen but measurable
+    measureEl.style.position = 'absolute';
+    measureEl.style.visibility = 'hidden';
+    measureEl.style.whiteSpace = 'pre';
+    measureEl.style.top = '-9999px';
+    measureEl.style.left = '-9999px';
+    // Copy relevant typography from the input for accurate width
+    const cs = getComputedStyle(display);
+    measureEl.style.fontFamily = cs.fontFamily;
+    measureEl.style.fontSize = cs.fontSize;
+    measureEl.style.fontWeight = cs.fontWeight;
+    measureEl.style.letterSpacing = cs.letterSpacing;
+    document.body.appendChild(measureEl);
+  }
+
+  function fitsValue(val) {
+    if (!display) return true;
+    ensureMeasure();
+    measureEl.textContent = val;
+    // Add a tiny epsilon to account for subpixel rounding
+    const epsilon = 2;
+    return measureEl.offsetWidth <= (display.clientWidth - epsilon);
+  }
+
+  function renderCaret() {
+    if (!display) return;
+    // Prefer the real selection when focused, fallback to internal caretPos
+    const isFocused = document.activeElement === display;
+    const selPos = isFocused && display.selectionStart != null ? display.selectionStart : caretPos;
+    caretPos = clamp(selPos, 0, display.value.length);
+    if (caretPosEl) caretPosEl.textContent = `Pos: ${caretPos}`;
+  }
 
   function insert(text) {
     if (!display) return;
-    const start = display.selectionStart ?? display.value.length;
-    const end = display.selectionEnd ?? display.value.length;
+    const isFocused = document.activeElement === display;
+    const start = isFocused ? (display.selectionStart ?? display.value.length) : caretPos;
+    const end = isFocused ? (display.selectionEnd ?? display.value.length) : caretPos;
     const before = display.value.slice(0, start);
     const after = display.value.slice(end);
-    display.value = before + text + after;
+    const nextVal = before + text + after;
+    if (!fitsValue(nextVal)) {
+      // Provide subtle feedback via history line
+      if (history) {
+        history.textContent = 'Max width reached';
+        setTimeout(() => { if (history.textContent === 'Max width reached') history.textContent = ''; }, 700);
+      }
+      return;
+    }
+    display.value = nextVal;
     const pos = start + text.length;
-    display.setSelectionRange(pos, pos);
-    display.focus();
+    // Avoid caret/focus operations when disabled
+    if (isFocused && !display.disabled) {
+      try { display.setSelectionRange(pos, pos); } catch {}
+      try { display.focus(); } catch {}
+    }
+    if (!isFocused) {
+      caretPos = pos;
+      renderCaret();
+    }
   }
 
   function sanitize(expr) {
-    expr = expr.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
-    if (!/^[-+*/().\d\s]+$/.test(expr)) return null;
+    // Normalize pretty symbols to operators for evaluation
+    expr = expr.replace(/[×]/g, '*').replace(/[÷]/g, '/');
+    expr = expr.replace(/(\d+(?:\.\d+)?)%(?!\s*[\d(])/g, '($1/100)');
+    // Allow modulus operator '%'
+    if (!/^[-+*/()%().\d\s]+$/.test(expr)) return null;
     return expr;
   }
 
@@ -126,8 +189,41 @@ function setupBasicCalculator() {
       let result = Function('"use strict"; return (' + sanitized + ')')();
       if (!isFinite(result)) throw new Error('Math error');
       result = parseFloat(result.toFixed(10));
+      // Keep a full string for tooltip/accessibility
+      const fullOut = String(result);
       history.textContent = expr + ' =';
-      display.value = String(result);
+      // Format to fit the display width if necessary
+      let out = String(result);
+      if (!fitsValue(out) && typeof result === 'number') {
+        // Try reducing decimals
+        if (!Number.isInteger(result)) {
+          for (let d = 9; d >= 0; d--) {
+            out = result.toFixed(d).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+            if (fitsValue(out)) break;
+          }
+        }
+        // If still too long, try exponential with decreasing precision
+        if (!fitsValue(out)) {
+          for (let d = 10; d >= 0; d--) {
+            out = result.toExponential(d).replace(/\.0+e/,'e');
+            if (fitsValue(out)) break;
+          }
+        }
+      }
+      display.value = out;
+      // If we compacted the value, hint with approximation and tooltip
+      if (out !== fullOut) {
+        if (history) history.textContent = expr + ' = \u2248 ' + out; // ≈
+        if (display) {
+          display.title = fullOut;
+          display.setAttribute('aria-label', `Result approximately ${out}. Full value ${fullOut}`);
+        }
+      } else {
+        if (display) {
+          display.title = fullOut;
+          display.setAttribute('aria-label', `Result ${fullOut}`);
+        }
+      }
       lastAns = result;
     } catch (e) {
       history.textContent = 'Error';
@@ -139,21 +235,32 @@ function setupBasicCalculator() {
       case 'C':
         display.value = '';
         history.textContent = '';
+        caretPos = 0;
+        renderCaret();
         break;
-      case 'BS':
-        if (display.selectionStart !== undefined && display.selectionStart !== display.selectionEnd) {
+      case 'BS': {
+        const isFocused = document.activeElement === display;
+        if (isFocused && !display.disabled && display.selectionStart !== undefined && display.selectionStart !== display.selectionEnd) {
           insert('');
         } else {
-          const pos = display.selectionStart ?? display.value.length;
+          const pos = isFocused ? (display.selectionStart ?? display.value.length) : caretPos;
           if (pos > 0) {
             display.value = display.value.slice(0, pos - 1) + display.value.slice(display.selectionEnd ?? pos);
             const newPos = pos - 1;
-            display.setSelectionRange(newPos, newPos);
+            if (isFocused && !display.disabled) {
+              try { display.setSelectionRange(newPos, newPos); } catch {}
+            }
+            if (!isFocused) {
+              caretPos = newPos;
+              renderCaret();
+            }
           }
         }
         break;
+      }
       case 'ANS': {
-        const pos = display.selectionStart ?? display.value.length;
+        const isFocused = document.activeElement === display;
+        const pos = isFocused ? (display.selectionStart ?? display.value.length) : caretPos;
         const before = display.value.slice(0, pos);
         if (/\bANS$/i.test(before)) return;
         insert('ANS');
@@ -161,9 +268,15 @@ function setupBasicCalculator() {
       }
       case 'EQ':
         evaluateExpr();
+        // Move caret to end after evaluation
+        caretPos = display.value.length;
+        renderCaret();
         break;
       default:
-        insert(key);
+        // Show pretty symbols for multiply/divide
+        if (key === '*') insert('×');
+        else if (key === '/') insert('÷');
+        else insert(key);
     }
   }
 
@@ -172,30 +285,75 @@ function setupBasicCalculator() {
     btn.addEventListener('click', () => {
       const k = btn.getAttribute('data-key');
       handleButton(k);
+      // Ensure input keeps focus so caret remains visible
+      if (display && !display.disabled) {
+        try {
+          display.focus();
+          const pos = clamp(caretPos, 0, display.value.length);
+          display.setSelectionRange(pos, pos);
+        } catch {}
+      }
     });
   });
 
-  // Keyboard support (scope to calculator display only)
+  // Caret navigation buttons
+  const prevBtn = document.getElementById('calc-prev');
+  const nextBtn = document.getElementById('calc-next');
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    const isFocused = document.activeElement === display;
+    const current = isFocused && display.selectionStart != null ? display.selectionStart : caretPos;
+    const pos = clamp(current - 1, 0, display.value.length);
+    if (isFocused && !display.disabled) {
+      try { display.setSelectionRange(pos, pos); } catch {}
+      try { display.focus(); } catch {}
+    } else {
+      caretPos = pos;
+    }
+    renderCaret();
+    if (display && !display.disabled) {
+      try { display.focus(); display.setSelectionRange(caretPos, caretPos); } catch {}
+    }
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    const isFocused = document.activeElement === display;
+    const current = isFocused && display.selectionStart != null ? display.selectionStart : caretPos;
+    const pos = clamp(current + 1, 0, display.value.length);
+    if (isFocused && !display.disabled) {
+      try { display.setSelectionRange(pos, pos); } catch {}
+      try { display.focus(); } catch {}
+    } else {
+      caretPos = pos;
+    }
+    renderCaret();
+    if (display && !display.disabled) {
+      try { display.focus(); display.setSelectionRange(caretPos, caretPos); } catch {}
+    }
+  });
+
+  // Disable text entry from keyboard; allow only on-screen buttons
   if (display) {
+    // Prevent the soft keyboard on mobile
+    display.setAttribute('inputmode', 'none');
+    // Block any keyboard interaction altogether
     display.addEventListener('keydown', (e) => {
-      const key = e.key;
-      if (/[0-9]/.test(key) || ['+', '-', '*', '/', '(', ')', '.'].includes(key)) {
-        handleButton(key);
-        e.preventDefault();
-      } else if (key === 'Enter' || key === '=') {
-        evaluateExpr();
-        e.preventDefault();
-      } else if (key === 'Backspace') {
-        handleButton('BS');
-        e.preventDefault();
-      } else if (key === '%') {
-        handleButton('%');
-        e.preventDefault();
-      } else if (key === 'Escape') {
-        handleButton('C');
-        e.preventDefault();
-      }
+      e.preventDefault();
     });
+    display.addEventListener('beforeinput', (e) => e.preventDefault());
+    display.addEventListener('paste', (e) => e.preventDefault());
+    display.addEventListener('drop', (e) => e.preventDefault());
+    // Allow focus so native caret is visible; typing is blocked by handlers above
+  }
+
+  // Initialize caret visuals
+  caretPos = display?.value.length || 0;
+  renderCaret();
+  // Focus input on init so caret blinks at end
+  if (display && !display.disabled) {
+    try {
+      display.focus();
+      const pos = clamp(caretPos, 0, display.value.length);
+      display.setSelectionRange(pos, pos);
+    } catch {}
   }
 }
 

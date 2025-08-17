@@ -479,7 +479,18 @@
                                 <!-- Display -->
                                 <div class="rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-3">
                                     <div id="calc-history" class="h-5 text-xs text-right text-gray-500 dark:text-gray-400 truncate"></div>
-                                    <input id="calc-display" type="text" inputmode="decimal" class="w-full bg-transparent text-right text-2xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none" placeholder="0" aria-label="Calculator input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                                    <input id="calc-display" type="text" inputmode="none" tabindex="0" aria-readonly="true" class="w-full bg-transparent text-right text-2xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none overflow-hidden caret-primary-500" placeholder="0" aria-label="Calculator input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                                    
+                                </div>
+                                <!-- Caret navigation controls -->
+                                <div class="grid grid-cols-3 items-center -mt-1 mb-1">
+                                    <div class="justify-self-start">
+                                        <button id="calc-prev" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95" title="Move cursor left"><i class="fas fa-caret-left mr-1"></i>Prev</button>
+                                    </div>
+                                    <span id="calc-caret-pos" class="justify-self-center text-xs text-gray-600 dark:text-gray-400">Pos: 0</span>
+                                    <div class="justify-self-end">
+                                        <button id="calc-next" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95" title="Move cursor right">Next<i class="fas fa-caret-right ml-1"></i></button>
+                                    </div>
                                 </div>
                                 <!-- Buttons -->
                                 <div class="grid grid-cols-4 gap-2 select-none">
@@ -510,7 +521,7 @@
 
                                     <button data-key="EQ" class="col-span-4 py-3 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-600 to-secondary-600 hover:-translate-y-0.5 hover:shadow-xl active:scale-95">=</button>
                                 </div>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Supports (), %, and standard operator precedence (BODMAS). Use keyboard too.</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Supports (), %, and standard operator precedence (BODMAS). Use on-screen buttons only.</p>
                             </div>
                         </div>
                     </div>
