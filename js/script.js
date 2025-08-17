@@ -358,6 +358,67 @@ function clampInputIfOutOfRange(input, min, max) {
     return clamped;
 }
 
+// Exponential slider mapping helpers for large monetary ranges
+// We normalize slider range to [0..1000] steps for smooth control, while mapping
+// to [minAmount..maxAmount] exponentially so early movement changes slowly.
+const SLIDER_NORM_MIN = 0;
+const SLIDER_NORM_MAX = 1000; // 1001 discrete positions
+
+function amountFromSliderPos(pos, minAmount, maxAmount) {
+    const minA = Math.max(1, minAmount);
+    const p = Math.min(SLIDER_NORM_MAX, Math.max(SLIDER_NORM_MIN, pos));
+    // Early discrete ladder: 1, 500, 1000, ..., 10000
+    const EARLY_STEPS = [1, ...Array.from({ length: 20 }, (_, i) => 500 * (i + 1))]; // 1, 500..10000
+    const EARLY_ZONE_POS = EARLY_STEPS.length - 1; // one slider tick per early step
+    if (p <= EARLY_ZONE_POS) {
+        const idx = Math.max(0, Math.min(EARLY_STEPS.length - 1, Math.round(p)));
+        const val = EARLY_STEPS[idx];
+        return Math.max(minA, val);
+    }
+    // Exponential mapping for the remaining positions from last early to max
+    const startVal = Math.max(minA, EARLY_STEPS[EARLY_STEPS.length - 1]); // typically 10000
+    const span = SLIDER_NORM_MAX - EARLY_ZONE_POS;
+    const t2 = (p - EARLY_ZONE_POS) / span; // 0..1
+    const ratio = maxAmount / startVal;
+    return startVal * Math.pow(ratio, t2);
+}
+
+function sliderPosFromAmount(amount, minAmount, maxAmount) {
+    const minA = Math.max(1, minAmount);
+    const a = Math.min(maxAmount, Math.max(minA, amount));
+    const EARLY_STEPS = [1, ...Array.from({ length: 20 }, (_, i) => 500 * (i + 1))];
+    const EARLY_ZONE_POS = EARLY_STEPS.length - 1;
+    const lastEarly = Math.max(minA, EARLY_STEPS[EARLY_STEPS.length - 1]);
+    if (a <= lastEarly) {
+        // Map to closest early step index; each index equals one slider tick
+        let idx = 0;
+        for (let i = 0; i < EARLY_STEPS.length; i++) {
+            if (a >= Math.max(minA, EARLY_STEPS[i])) idx = i; else break;
+        }
+        const pos = idx; // direct mapping
+        return Math.min(SLIDER_NORM_MAX, Math.max(SLIDER_NORM_MIN, pos));
+    }
+    // Exponential region inverse mapping
+    const span = SLIDER_NORM_MAX - EARLY_ZONE_POS;
+    const ratio = maxAmount / lastEarly;
+    const t2 = Math.log(a / lastEarly) / Math.log(ratio); // 0..1
+    const pos = Math.round(EARLY_ZONE_POS + t2 * span);
+    return Math.min(SLIDER_NORM_MAX, Math.max(SLIDER_NORM_MIN, pos));
+}
+
+// Round to a "nice" step depending on magnitude (to avoid odd decimals)
+function roundNiceAmount(n) {
+    // Start with 1, then jump to 500, 1000, 1500, ...
+    if (n < 500) return 1;
+    if (n < 10000) return Math.round(n / 500) * 500; // 500-steps up to <10k
+    if (n < 100000) return Math.round(n / 1000) * 1000; // 1k steps
+    if (n < 1000000) return Math.round(n / 5000) * 5000; // 5k steps
+    if (n < 10000000) return Math.round(n / 10000) * 10000; // 10k steps
+    if (n < 100000000) return Math.round(n / 50000) * 50000; // 50k steps
+    if (n < 1000000000) return Math.round(n / 100000) * 100000; // 1 lakh steps
+    return Math.round(n / 500000) * 500000; // 5 lakh steps and above
+}
+
 // Charts: Line (growth) + Pie (breakdown)
 let lineChart = null;
 let pieChart = null;
@@ -533,21 +594,37 @@ function setupSIPCalculator() {
     const sipRate = document.getElementById('sip-rate');
     const sipRateRange = document.getElementById('sip-rate-range');
     
-    // Link inputs and range sliders (live clamp to keep calc consistent)
+    // Normalize the amount slider to 0..1000 and apply exponential mapping
+    const SIP_MIN = 1;
+    const SIP_MAX = 500000000;
+    if (sipAmountRange) {
+        sipAmountRange.min = SLIDER_NORM_MIN;
+        sipAmountRange.max = SLIDER_NORM_MAX;
+        sipAmountRange.step = 1;
+        // Initialize slider position based on current input value
+        const initVal = parseFloat(sipAmount.value) || 5000;
+        sipAmountRange.value = sliderPosFromAmount(initVal, SIP_MIN, SIP_MAX);
+    }
+
+    // Link inputs and range sliders (live clamp + mapping)
     sipAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(sipAmount, 1, 500000000);
-        sipAmountRange.value = sipAmount.value;
+        const clamped = clampInputIfOutOfRange(sipAmount, SIP_MIN, SIP_MAX);
+        if (clamped != null && sipAmountRange) {
+            sipAmountRange.value = sliderPosFromAmount(clamped, SIP_MIN, SIP_MAX);
+        }
         calculateSIP();
     });
     
     sipAmountRange.addEventListener('input', function() {
-        sipAmount.value = this.value;
+        const amt = roundNiceAmount(amountFromSliderPos(parseFloat(this.value) || 0, SIP_MIN, SIP_MAX));
+        sipAmount.value = amt;
         calculateSIP();
     });
     
     sipPeriod.addEventListener('input', function() {
-        clampInputIfOutOfRange(sipPeriod, 1, 100);
-        sipPeriodRange.value = sipPeriod.value;
+        const v = clampInputIfOutOfRange(sipPeriod, 1, 100);
+        // When empty, move slider to starting point (min)
+        sipPeriodRange.value = (v == null) ? sipPeriodRange.min : sipPeriod.value;
         calculateSIP();
     });
     
@@ -557,8 +634,9 @@ function setupSIPCalculator() {
     });
     
     sipRate.addEventListener('input', function() {
-        clampInputIfOutOfRange(sipRate, 1, 100);
-        sipRateRange.value = sipRate.value;
+        const v = clampInputIfOutOfRange(sipRate, 1, 100);
+        // When empty, move slider to starting point (min)
+        sipRateRange.value = (v == null) ? sipRateRange.min : sipRate.value;
         calculateSIP();
     });
     
@@ -568,7 +646,7 @@ function setupSIPCalculator() {
     });
     
     // Validate inputs
-    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, 1, 500000000));
+    sipAmount.addEventListener('blur', () => validateNumberInput(sipAmount, SIP_MIN, SIP_MAX));
     sipPeriod.addEventListener('blur', () => validateNumberInput(sipPeriod, 1, 100));
     sipRate.addEventListener('blur', () => validateNumberInput(sipRate, 1, 100));
     
@@ -635,21 +713,35 @@ function setupLumpsumCalculator() {
     const lumpsumRate = document.getElementById('lumpsum-rate');
     const lumpsumRateRange = document.getElementById('lumpsum-rate-range');
     
-    // Link inputs and range sliders (live clamp)
+    // Normalize amount slider and apply exponential mapping
+    const LUMP_MIN = 1;
+    const LUMP_MAX = 5000000000;
+    if (lumpsumAmountRange) {
+        lumpsumAmountRange.min = SLIDER_NORM_MIN;
+        lumpsumAmountRange.max = SLIDER_NORM_MAX;
+        lumpsumAmountRange.step = 1;
+        const initVal = parseFloat(lumpsumAmount.value) || 100000;
+        lumpsumAmountRange.value = sliderPosFromAmount(initVal, LUMP_MIN, LUMP_MAX);
+    }
+
+    // Link inputs and range sliders (live clamp + mapping)
     lumpsumAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(lumpsumAmount, 1, 5000000000);
-        lumpsumAmountRange.value = lumpsumAmount.value;
+        const clamped = clampInputIfOutOfRange(lumpsumAmount, LUMP_MIN, LUMP_MAX);
+        if (clamped != null && lumpsumAmountRange) {
+            lumpsumAmountRange.value = sliderPosFromAmount(clamped, LUMP_MIN, LUMP_MAX);
+        }
         calculateLumpsum();
     });
     
     lumpsumAmountRange.addEventListener('input', function() {
-        lumpsumAmount.value = this.value;
+        const amt = roundNiceAmount(amountFromSliderPos(parseFloat(this.value) || 0, LUMP_MIN, LUMP_MAX));
+        lumpsumAmount.value = amt;
         calculateLumpsum();
     });
     
     lumpsumPeriod.addEventListener('input', function() {
-        clampInputIfOutOfRange(lumpsumPeriod, 1, 100);
-        lumpsumPeriodRange.value = lumpsumPeriod.value;
+        const v = clampInputIfOutOfRange(lumpsumPeriod, 1, 100);
+        lumpsumPeriodRange.value = (v == null) ? lumpsumPeriodRange.min : lumpsumPeriod.value;
         calculateLumpsum();
     });
     
@@ -659,8 +751,8 @@ function setupLumpsumCalculator() {
     });
     
     lumpsumRate.addEventListener('input', function() {
-        clampInputIfOutOfRange(lumpsumRate, 1, 100);
-        lumpsumRateRange.value = lumpsumRate.value;
+        const v = clampInputIfOutOfRange(lumpsumRate, 1, 100);
+        lumpsumRateRange.value = (v == null) ? lumpsumRateRange.min : lumpsumRate.value;
         calculateLumpsum();
     });
     
@@ -670,7 +762,7 @@ function setupLumpsumCalculator() {
     });
     
     // Final clamp on blur (live clamp is already applied in input handlers above)
-    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, 1, 5000000000));
+    lumpsumAmount.addEventListener('blur', () => validateNumberInput(lumpsumAmount, LUMP_MIN, LUMP_MAX));
     lumpsumPeriod.addEventListener('blur', () => validateNumberInput(lumpsumPeriod, 1, 100));
     lumpsumRate.addEventListener('blur', () => validateNumberInput(lumpsumRate, 1, 100));
     
@@ -843,21 +935,35 @@ function setupEMICalculator() {
     const emiTenure = document.getElementById('emi-tenure');
     const emiTenureRange = document.getElementById('emi-tenure-range');
     
-    // Link inputs and range sliders (live clamp)
+    // Normalize amount slider and apply exponential mapping
+    const EMI_MIN = 1;
+    const EMI_MAX = 5000000000;
+    if (emiAmountRange) {
+        emiAmountRange.min = SLIDER_NORM_MIN;
+        emiAmountRange.max = SLIDER_NORM_MAX;
+        emiAmountRange.step = 1;
+        const initVal = parseFloat(emiAmount.value) || 500000;
+        emiAmountRange.value = sliderPosFromAmount(initVal, EMI_MIN, EMI_MAX);
+    }
+
+    // Link inputs and range sliders (live clamp + mapping)
     emiAmount.addEventListener('input', function() {
-        clampInputIfOutOfRange(emiAmount, 1, 5000000000);
-        emiAmountRange.value = emiAmount.value;
+        const clamped = clampInputIfOutOfRange(emiAmount, EMI_MIN, EMI_MAX);
+        if (clamped != null && emiAmountRange) {
+            emiAmountRange.value = sliderPosFromAmount(clamped, EMI_MIN, EMI_MAX);
+        }
         calculateEMI();
     });
     
     emiAmountRange.addEventListener('input', function() {
-        emiAmount.value = this.value;
+        const amt = roundNiceAmount(amountFromSliderPos(parseFloat(this.value) || 0, EMI_MIN, EMI_MAX));
+        emiAmount.value = amt;
         calculateEMI();
     });
     
     emiRate.addEventListener('input', function() {
-        clampInputIfOutOfRange(emiRate, 1, 100);
-        emiRateRange.value = emiRate.value;
+        const v = clampInputIfOutOfRange(emiRate, 1, 100);
+        emiRateRange.value = (v == null) ? emiRateRange.min : emiRate.value;
         calculateEMI();
     });
     
@@ -867,8 +973,8 @@ function setupEMICalculator() {
     });
     
     emiTenure.addEventListener('input', function() {
-        clampInputIfOutOfRange(emiTenure, 1, 100);
-        emiTenureRange.value = emiTenure.value;
+        const v = clampInputIfOutOfRange(emiTenure, 1, 100);
+        emiTenureRange.value = (v == null) ? emiTenureRange.min : emiTenure.value;
         calculateEMI();
     });
     
@@ -878,7 +984,7 @@ function setupEMICalculator() {
     });
     
     // Validate inputs
-    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, 1, 5000000000));
+    emiAmount.addEventListener('blur', () => validateNumberInput(emiAmount, EMI_MIN, EMI_MAX));
     emiRate.addEventListener('blur', () => validateNumberInput(emiRate, 1, 100));
     emiTenure.addEventListener('blur', () => validateNumberInput(emiTenure, 1, 100));
     
