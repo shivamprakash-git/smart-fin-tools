@@ -347,14 +347,6 @@ function setupBasicCalculator() {
   // Initialize caret visuals
   caretPos = display?.value.length || 0;
   renderCaret();
-  // Focus input on init so caret blinks at end
-  if (display && !display.disabled) {
-    try {
-      display.focus();
-      const pos = clamp(caretPos, 0, display.value.length);
-      display.setSelectionRange(pos, pos);
-    } catch {}
-  }
 }
 
 // Initialize when DOM is ready

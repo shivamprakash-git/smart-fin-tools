@@ -17,6 +17,14 @@ function setupInputFocusScroll() {
     const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const vv = window.visualViewport || null;
+    // Track manual user scrolling to avoid snapping back to the focused input
+    let userScrolling = false;
+    let userScrollTimer = null;
+    const onUserScroll = () => {
+        userScrolling = true;
+        clearTimeout(userScrollTimer);
+        userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
+    };
 
     const getHeaderOffset = () => {
         const header = document.querySelector('header');
@@ -36,6 +44,8 @@ function setupInputFocusScroll() {
 
     const scheduleScroll = () => {
         if (!activeEl) return;
+        // If user is actively scrolling, do not auto-correct position
+        if (userScrolling) return;
         clearTimeout(scheduleTimer);
         scheduleTimer = setTimeout(() => {
             // Use rAF to read/layout just-in-time
@@ -114,6 +124,10 @@ function setupInputFocusScroll() {
 
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
+    // Observe manual scrolling gestures
+    window.addEventListener('scroll', onUserScroll, { passive: true });
+    window.addEventListener('wheel', onUserScroll, { passive: true });
+    window.addEventListener('touchmove', onUserScroll, { passive: true });
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
@@ -128,6 +142,11 @@ function setupInputFocusScroll() {
         const onVVChange = () => {
             applyKeyboardPadding();
             if (!activeEl) return;
+            // Do not interfere if user is manually scrolling
+            if (userScrolling) return;
+            // Only reposition when the on-screen keyboard is actually visible
+            const kbNow = getKeyboardHeight();
+            if (kbNow <= 0) return;
             clearTimeout(vvTimer);
             vvTimer = setTimeout(() => {
                 // For editor, re-run tailored logic; for others, scheduleScroll
