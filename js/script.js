@@ -348,71 +348,83 @@ function getChartCtx(id) {
     return el ? el.getContext('2d') : null;
 }
 
-function ensureCharts() {
-    const lineCtx = getChartCtx('calc-line-chart');
-    const pieCtx = getChartCtx('calc-pie-chart');
+// Create the main chart (line or stacked bar)
+function createMainChart(type) {
+    const ctx = getChartCtx('calc-line-chart');
+    if (!ctx || typeof Chart === 'undefined') return null;
 
-    if (!lineChart && lineCtx && typeof Chart !== 'undefined') {
-        lineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [
-                    {
-                        label: 'Invested',
-                        data: [],
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99,102,241,0.15)',
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 2,
-                        pointHoverRadius: 5,
-                        borderWidth: 2
-                    },
-                    {
-                        label: 'Returns',
-                        data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16,185,129,0.15)',
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 2,
-                        pointHoverRadius: 5,
-                        borderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { display: true, labels: { color: '#94a3b8' } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                const dsLabel = ctx.dataset.label || '';
-                                const val = ctx.parsed.y;
-                                return `${dsLabel}: ${formatCurrencyCompact(val)}`;
-                            }
+    const isBar = type === 'bar';
+    return new Chart(ctx, {
+        type: isBar ? 'bar' : 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Invested',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: isBar ? 'rgba(99,102,241,0.7)' : 'rgba(99,102,241,0.15)',
+                    tension: isBar ? undefined : 0.3,
+                    fill: false,
+                    pointRadius: isBar ? 0 : 2,
+                    pointHoverRadius: isBar ? 0 : 5,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Returns',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: isBar ? 'rgba(16,185,129,0.7)' : 'rgba(16,185,129,0.15)',
+                    tension: isBar ? undefined : 0.3,
+                    fill: false,
+                    pointRadius: isBar ? 0 : 2,
+                    pointHoverRadius: isBar ? 0 : 5,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: true, labels: { color: '#94a3b8' } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const dsLabel = ctx.dataset.label || '';
+                            const val = ctx.parsed.y;
+                            return `${dsLabel}: ${formatCurrencyCompact(val)}`;
                         }
                     }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: isBar,
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(148,163,184,0.15)' }
                 },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
-                    y: {
-                        ticks: {
-                            color: '#94a3b8',
-                            maxTicksLimit: 6,
-                            callback: function(v) { return formatIndianCompact(v, true); }
-                        },
-                        grid: { color: 'rgba(148,163,184,0.15)' },
-                        beginAtZero: true,
-                        grace: '5%'
-                    }
+                y: {
+                    stacked: isBar,
+                    ticks: {
+                        color: '#94a3b8',
+                        maxTicksLimit: 6,
+                        callback: function(v) { return formatIndianCompact(v, true); }
+                    },
+                    grid: { color: 'rgba(148,163,184,0.15)' },
+                    beginAtZero: true,
+                    grace: '5%'
                 }
             }
-        });
+        }
+    });
+}
+
+function ensureCharts() {
+    const pieCtx = getChartCtx('calc-pie-chart');
+    if (!lineChart) {
+        lineChart = createMainChart('line');
     }
 
     if (!pieChart && pieCtx && typeof Chart !== 'undefined') {
@@ -445,8 +457,14 @@ function ensureCharts() {
     }
 }
 
-function updateCharts({ labels, investedSeries, returnsSeries, lineLabels, lineVisibility, pieLabels, pieData, pieColors, ui }) {
+function updateCharts({ labels, investedSeries, returnsSeries, lineLabels, lineVisibility, pieLabels, pieData, pieColors, ui, chartType }) {
     ensureCharts();
+    // Switch chart type dynamically if requested
+    const desiredType = chartType || 'line';
+    if (lineChart && typeof Chart !== 'undefined' && lineChart.config.type !== desiredType) {
+        try { lineChart.destroy(); } catch (e) {}
+        lineChart = createMainChart(desiredType);
+    }
     // Update UI titles/badges when provided
     if (ui) {
         const gt = document.getElementById('growth-title');
@@ -476,6 +494,7 @@ function updateCharts({ labels, investedSeries, returnsSeries, lineLabels, lineV
         }
         lineChart.update();
     }
+
     if (pieChart && Array.isArray(pieLabels) && Array.isArray(pieData)) {
         pieChart.data.labels = pieLabels;
         pieChart.data.datasets[0].data = pieData;
@@ -572,6 +591,7 @@ function setupSIPCalculator() {
             pieLabels: ['Invested', 'Returns'],
             pieData: [invested, Math.max(0, returns)],
             pieColors: ['#6366f1', '#0ea5e9'],
+            chartType: 'line',
             ui: {
                 growthTitle: 'SIP Growth Over Time',
                 growthBadge: 'Tip: Longer tenure boosts compounding',
@@ -668,6 +688,7 @@ function setupLumpsumCalculator() {
             pieLabels: ['Invested', 'Returns'],
             pieData: [amount, Math.max(0, returns)],
             pieColors: ['#6366f1', '#0ea5e9'],
+            chartType: 'line',
             ui: {
                 growthTitle: 'Lumpsum Growth Over Time',
                 growthBadge: 'Tip: Time in market > timing',
@@ -765,21 +786,25 @@ function setupGSTCalculator() {
         document.getElementById('gst-tax').textContent = formatCurrencyOrInfinity(tax);
         document.getElementById('gst-net').textContent = formatCurrencyOrInfinity(net);
 
-        // Base vs GST lines
+        // Base vs GST totals as a single stacked bar (align with EMI style)
+        const baseLabel = isAddGST ? 'Base' : 'Pre-tax Base';
+        const gstLabel = isAddGST ? 'GST Added' : 'GST Portion';
+        const badge = isAddGST ? 'Add GST' : 'Remove GST';
         updateCharts({
-            labels: ['Before', 'After'],
-            investedSeries: [original, original],
-            returnsSeries: [0, Math.max(0, tax)],
-            lineLabels: ['Base', 'GST'],
+            labels: ['Total'],
+            investedSeries: [original],
+            returnsSeries: [Math.max(0, tax)],
+            lineLabels: [baseLabel, gstLabel],
             lineVisibility: [true, true],
-            pieLabels: ['Base', 'GST'],
+            pieLabels: [baseLabel, gstLabel],
             pieData: [original, Math.max(0, tax)],
             pieColors: ['#6366f1', '#0ea5e9'],
+            chartType: 'bar',
             ui: {
-                growthTitle: 'GST Impact',
-                growthBadge: 'Tip: Choose Add vs Remove GST',
+                growthTitle: 'GST Total',
+                growthBadge: badge,
                 breakdownTitle: 'Breakdown',
-                breakdownBadge: 'Base vs GST'
+                breakdownBadge: `${baseLabel} vs ${gstLabel}`
             }
         });
     }
@@ -855,90 +880,28 @@ function setupEMICalculator() {
         document.getElementById('emi-interest').textContent = formatCurrencyOrInfinity(totalInterest);
         document.getElementById('emi-total').textContent = formatCurrencyOrInfinity(totalPayment);
 
-        // Cumulative principal vs interest paid by year (amortization)
-        const labels = [];
-        const investedSeries = [];
-        const returnsSeries = [];
-        let remaining = amount;
-        let cumPrincipal = 0;
-        let cumInterest = 0;
-        let crossoverMonth = null; // first month where principal portion >= interest portion
-        for (let m = 1; m <= months; m++) {
-            const interestPortion = remaining * monthlyRate;
-            const principalPortion = emi - interestPortion;
-            cumInterest += interestPortion;
-            cumPrincipal += principalPortion;
-            remaining -= principalPortion;
-            if (crossoverMonth === null && principalPortion >= interestPortion) {
-                crossoverMonth = m;
-            }
-            if (m % 12 === 0) {
-                const y = m / 12;
-                labels.push(`Y${y}`);
-                investedSeries.push(Math.max(0, cumPrincipal));
-                returnsSeries.push(Math.max(0, cumInterest));
-            }
-        }
-        // If tenure is not a whole number of years, add the final partial year point
-        if (months % 12 !== 0) {
-            const y = months / 12;
-            const yLabel = Number.isInteger(y) ? `Y${y}` : `Y${y.toFixed(1)}`;
-            labels.push(yLabel);
-            investedSeries.push(Math.max(0, cumPrincipal));
-            returnsSeries.push(Math.max(0, cumInterest));
-        }
+        // Simple stacked bar showing total Principal vs total Interest
+        const labels = ['Total'];
+        const investedSeries = [amount];      // Principal
+        const returnsSeries = [Math.max(0, totalInterest)]; // Interest
         updateCharts({
             labels,
             investedSeries,
             returnsSeries,
-            lineLabels: ['Principal Paid', 'Interest Paid'],
+            lineLabels: ['Principal', 'Interest'],
             lineVisibility: [true, true],
             pieLabels: ['Principal', 'Interest'],
             pieData: [amount, Math.max(0, totalInterest)],
             pieColors: ['#6366f1', '#0ea5e9'],
+            chartType: 'bar',
             ui: {
-                growthTitle: 'EMI Payments Over Time',
-                growthBadge: 'Tip: Prepayments cut total interest',
+                growthTitle: 'EMI Total Cost',
+                growthBadge: 'Principal vs Interest over loan',
                 breakdownTitle: 'Breakdown',
                 breakdownBadge: 'Principal vs Interest'
             }
         });
-
-        // Highlight the crossover point on both lines (nearest label index)
-        if (typeof Chart !== 'undefined' && lineChart) {
-            // Determine index in labels to highlight based on crossoverMonth
-            if (crossoverMonth !== null && labels.length > 0) {
-                let idx;
-                const yearsCompleted = Math.floor(crossoverMonth / 12);
-                if (crossoverMonth % 12 === 0) {
-                    idx = Math.max(0, yearsCompleted - 1); // exactly at a year boundary
-                } else {
-                    idx = yearsCompleted; // falls within the next (partial) year bucket
-                }
-                if (idx >= labels.length) idx = labels.length - 1;
-
-                const defaultRadius = 2;
-                const defaultHover = 5;
-                const highlightRadius = 6;
-                const highlightHover = 8;
-                const makeArray = (len, fillRadius, highlightIndex, highlightVal) => {
-                    const arr = new Array(len).fill(fillRadius);
-                    if (highlightIndex >= 0 && highlightIndex < len) arr[highlightIndex] = highlightVal;
-                    return arr;
-                };
-
-                // Ensure arrays exist and set for both datasets
-                lineChart.data.datasets[0].pointRadius = makeArray(labels.length, defaultRadius, idx, highlightRadius);
-                lineChart.data.datasets[0].pointHoverRadius = makeArray(labels.length, defaultHover, idx, highlightHover);
-                lineChart.data.datasets[0].pointStyle = makeArray(labels.length, 'circle', idx, 'star');
-
-                lineChart.data.datasets[1].pointRadius = makeArray(labels.length, defaultRadius, idx, highlightRadius);
-                lineChart.data.datasets[1].pointHoverRadius = makeArray(labels.length, defaultHover, idx, highlightHover);
-                lineChart.data.datasets[1].pointStyle = makeArray(labels.length, 'circle', idx, 'star');
-
-                lineChart.update();
-            }
-        }
+        // No crossover/highlight needed for totals bar chart
     }
     
     // Initial calculation
