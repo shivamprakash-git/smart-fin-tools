@@ -20,35 +20,14 @@ function setupInputFocusScroll() {
     // Track manual user scrolling to avoid snapping back to the focused input
     let userScrolling = false;
     let userScrollTimer = null;
-    // Track last focus time and last scroll position to avoid blurring on tiny moves after tap
-    let lastFocusTs = 0;
-    let lastScrollY = window.scrollY;
     const onUserScroll = () => {
-        // Generic scroll (may be programmatic) — do NOT mark as user scrolling
-        lastScrollY = window.scrollY;
-    };
-    // Explicit user gesture scroll handlers — blur focused inputs immediately
-    const onUserGesture = (e) => {
         userScrolling = true;
-        // Only blur if: not a tiny move right after focusing, and movement is significant
-        const now = Date.now();
-        const sinceFocus = now - lastFocusTs;
-        // Determine movement magnitude
-        let bigMove = false;
-        if (e && e.type === 'wheel') {
-            const dx = Math.abs(e.deltaX || 0);
-            const dy = Math.abs(e.deltaY || 0);
-            bigMove = (dx > 10) || (dy > 10);
-        } else {
-            const dy = Math.abs(window.scrollY - lastScrollY);
-            bigMove = dy > 12; // ~12px threshold
-        }
-        if (sinceFocus >= 220 && bigMove) {
-            if (activeEl && activeEl.matches && activeEl.matches('input, textarea, select')) {
-                activeEl.blur();
-            }
-        }
         clearTimeout(userScrollTimer);
+        // If an input is focused while the user scrolls, blur it immediately to
+        // remove the caret and prevent any auto-scroll snapping back to it.
+        if (activeEl && document.activeElement === activeEl) {
+            try { activeEl.blur(); } catch (e) {}
+        }
         userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
     };
 
@@ -110,7 +89,6 @@ function setupInputFocusScroll() {
         if (!el || !(el instanceof Element)) return;
         if (!el.matches('input, textarea, select')) return;
         activeEl = el;
-        lastFocusTs = Date.now();
 
         // Tailored handling for large editor to avoid bounce on mobile
         if (el.id === 'editor-area') {
@@ -153,8 +131,8 @@ function setupInputFocusScroll() {
     document.addEventListener('focusout', onFocusOut);
     // Observe manual scrolling gestures
     window.addEventListener('scroll', onUserScroll, { passive: true });
-    window.addEventListener('wheel', onUserGesture, { passive: true });
-    window.addEventListener('touchmove', onUserGesture, { passive: true });
+    window.addEventListener('wheel', onUserScroll, { passive: true });
+    window.addEventListener('touchmove', onUserScroll, { passive: true });
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
