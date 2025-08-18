@@ -23,11 +23,6 @@ function setupInputFocusScroll() {
     const onUserScroll = () => {
         userScrolling = true;
         clearTimeout(userScrollTimer);
-        // If an input is focused while the user scrolls, blur it immediately to
-        // remove the caret and prevent any auto-scroll snapping back to it.
-        if (activeEl && document.activeElement === activeEl) {
-            try { activeEl.blur(); } catch (e) {}
-        }
         userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
     };
 
@@ -133,6 +128,18 @@ function setupInputFocusScroll() {
     window.addEventListener('scroll', onUserScroll, { passive: true });
     window.addEventListener('wheel', onUserScroll, { passive: true });
     window.addEventListener('touchmove', onUserScroll, { passive: true });
+    // Also treat initial taps/clicks as user interaction to avoid snapping back
+    window.addEventListener('pointerdown', onUserScroll, { passive: true });
+    window.addEventListener('touchstart', onUserScroll, { passive: true });
+    window.addEventListener('mousedown', onUserScroll, { passive: true });
+
+    // If user begins interacting with a slider, stop auto-scrolling to previous input
+    document.addEventListener('pointerdown', (e) => {
+        const t = e.target;
+        if (t && typeof t.matches === 'function' && (t.matches('input[type="range"]') || t.matches('.range-slider'))) {
+            activeEl = null;
+        }
+    }, { passive: true });
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
