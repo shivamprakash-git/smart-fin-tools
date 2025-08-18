@@ -342,6 +342,26 @@ function setupBasicCalculator() {
     display.addEventListener('paste', (e) => e.preventDefault());
     display.addEventListener('drop', (e) => e.preventDefault());
     // Allow focus so native caret is visible; typing is blocked by handlers above
+
+    // Block caret moves from touch/mouse interactions – keep caret controlled by Prev/Next
+    const restoreCaret = () => {
+      try {
+        const pos = clamp(caretPos, 0, display.value.length);
+        display.focus();
+        display.setSelectionRange(pos, pos);
+      } catch {}
+    };
+    // Prevent default pointer actions that would move the caret
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(ev => {
+      display.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        restoreCaret();
+      }, { passive: false });
+    });
+    // If selection somehow changes (e.g., platform quirks), snap it back
+    display.addEventListener('select', () => restoreCaret());
+    display.addEventListener('focus', () => restoreCaret());
   }
 
   // Initialize caret visuals
