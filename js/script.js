@@ -20,12 +20,16 @@ function setupInputFocusScroll() {
     // Track manual user scrolling to avoid snapping back to the focused input
     let userScrolling = false;
     let userScrollTimer = null;
-    // Track when user is interacting with sliders to prevent unwanted scrolling
-    let interactingWithSlider = false;
-    
+    // Helper: is a text-editing control (likely to summon keyboard/caret)
+    const isTextualInput = (el) => !!el && el.matches && el.matches('textarea, input:not([type]), input[type="text"], input[type="number"], input[type="email"], input[type="search"], input[type="tel"], input[type="url"], input[type="password"]');
     const onUserScroll = () => {
         userScrolling = true;
         clearTimeout(userScrollTimer);
+        // If a text field is focused while user scrolls, blur it to stop caret and prevent snap-back
+        if (activeEl && isTextualInput(activeEl)) {
+            try { activeEl.blur(); } catch (e) {}
+            activeEl = null;
+        }
         userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
     };
 
@@ -47,8 +51,8 @@ function setupInputFocusScroll() {
 
     const scheduleScroll = () => {
         if (!activeEl) return;
-        // If user is actively scrolling or interacting with sliders, do not auto-correct position
-        if (userScrolling || interactingWithSlider) return;
+        // If user is actively scrolling, do not auto-correct position
+        if (userScrolling) return;
         clearTimeout(scheduleTimer);
         scheduleTimer = setTimeout(() => {
             // Use rAF to read/layout just-in-time
@@ -124,20 +128,6 @@ function setupInputFocusScroll() {
             scheduleTimer = null;
         }
     };
-    
-    // Track slider interactions to prevent unwanted scrolling
-    const onSliderInteractionStart = () => {
-        interactingWithSlider = true;
-        // Clear any pending scroll operations
-        clearTimeout(scheduleTimer);
-    };
-    
-    const onSliderInteractionEnd = () => {
-        // Add a small delay before allowing scrolling again
-        setTimeout(() => {
-            interactingWithSlider = false;
-        }, 300);
-    };
 
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
@@ -145,14 +135,24 @@ function setupInputFocusScroll() {
     window.addEventListener('scroll', onUserScroll, { passive: true });
     window.addEventListener('wheel', onUserScroll, { passive: true });
     window.addEventListener('touchmove', onUserScroll, { passive: true });
-    
-    // Add event listeners for all range sliders
-    document.querySelectorAll('input[type="range"]').forEach(slider => {
-        slider.addEventListener('mousedown', onSliderInteractionStart);
-        slider.addEventListener('touchstart', onSliderInteractionStart, { passive: true });
-        slider.addEventListener('mouseup', onSliderInteractionEnd);
-        slider.addEventListener('touchend', onSliderInteractionEnd, { passive: true });
-    });
+
+    // If the user taps/presses on a slider/range control, proactively blur any text input
+    const onPreInteract = (e) => {
+        const t = e.target;
+        const isRange = t && (t.matches && (t.matches('input[type="range"], .range-slider')));
+        if (!isRange) return;
+        if (activeEl && isTextualInput(activeEl) && activeEl !== t) {
+            // Prevent the browser from auto-scrolling the old focused text field back into view
+            try { activeEl.blur(); } catch (err) {}
+            activeEl = null;
+            // Temporarily mark as user scrolling to disable scheduled auto-scroll
+            userScrolling = true;
+            clearTimeout(userScrollTimer);
+            userScrollTimer = setTimeout(() => { userScrolling = false; }, 400);
+        }
+    };
+    document.addEventListener('pointerdown', onPreInteract, { passive: true, capture: true });
+    document.addEventListener('touchstart', onPreInteract, { passive: true, capture: true });
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
@@ -167,8 +167,8 @@ function setupInputFocusScroll() {
         const onVVChange = () => {
             applyKeyboardPadding();
             if (!activeEl) return;
-            // Do not interfere if user is manually scrolling or interacting with sliders
-            if (userScrolling || interactingWithSlider) return;
+            // Do not interfere if user is manually scrolling
+            if (userScrolling) return;
             // Only reposition when the on-screen keyboard is actually visible
             const kbNow = getKeyboardHeight();
             if (kbNow <= 0) return;
