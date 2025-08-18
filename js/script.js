@@ -25,7 +25,12 @@ function setupInputFocusScroll() {
     const onUserScroll = () => {
         userScrolling = true;
         clearTimeout(userScrollTimer);
-        // If a text field is focused while user scrolls, blur it to stop caret and prevent snap-back
+        userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
+    };
+    // Only blur on explicit user gesture scrolls (wheel/touchmove), not generic scrolls
+    const onGestureScroll = () => {
+        userScrolling = true;
+        clearTimeout(userScrollTimer);
         if (activeEl && isTextualInput(activeEl)) {
             try { activeEl.blur(); } catch (e) {}
             activeEl = null;
@@ -133,8 +138,8 @@ function setupInputFocusScroll() {
     document.addEventListener('focusout', onFocusOut);
     // Observe manual scrolling gestures
     window.addEventListener('scroll', onUserScroll, { passive: true });
-    window.addEventListener('wheel', onUserScroll, { passive: true });
-    window.addEventListener('touchmove', onUserScroll, { passive: true });
+    window.addEventListener('wheel', onGestureScroll, { passive: true });
+    window.addEventListener('touchmove', onGestureScroll, { passive: true });
 
     // If the user taps/presses on a slider/range control, proactively blur any text input
     const onPreInteract = (e) => {
