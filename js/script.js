@@ -21,7 +21,17 @@ function setupInputFocusScroll() {
     let userScrolling = false;
     let userScrollTimer = null;
     const onUserScroll = () => {
+        // Generic scroll (may be programmatic) — just mark as scrolling
         userScrolling = true;
+        clearTimeout(userScrollTimer);
+        userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
+    };
+    // Explicit user gesture scroll handlers — blur focused inputs immediately
+    const onUserGesture = () => {
+        userScrolling = true;
+        if (activeEl && activeEl.matches && activeEl.matches('input, textarea, select')) {
+            activeEl.blur();
+        }
         clearTimeout(userScrollTimer);
         userScrollTimer = setTimeout(() => { userScrolling = false; }, 500);
     };
@@ -126,8 +136,8 @@ function setupInputFocusScroll() {
     document.addEventListener('focusout', onFocusOut);
     // Observe manual scrolling gestures
     window.addEventListener('scroll', onUserScroll, { passive: true });
-    window.addEventListener('wheel', onUserScroll, { passive: true });
-    window.addEventListener('touchmove', onUserScroll, { passive: true });
+    window.addEventListener('wheel', onUserGesture, { passive: true });
+    window.addEventListener('touchmove', onUserGesture, { passive: true });
 
     // Reposition on visual viewport changes (keyboard height/movement)
     if (vv) {
