@@ -351,8 +351,11 @@
           const snap = JSON.parse(raw);
           if (snap && Array.isArray(snap.items) && Array.isArray(snap.sources)) {
             renderItems(snap.items);
-            const when = new Date(snap.ts).toLocaleString();
-            meta.textContent = `Last updated ${when} • Offline cache`;
+            if (Array.isArray(snap.sources) && snap.sources.length) {
+              meta.textContent = `Sources: ${snap.sources.join(', ')} • Offline cache`;
+            } else {
+              meta.textContent = 'Offline cache';
+            }
 
             // Ensure track styles and animation
             track.style.display = 'inline-flex';
