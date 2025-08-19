@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "smart-fin-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SmartFinTools - Financial calculators",
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/tailwind.css -o ./css/tailwind.build.css --minify",
+    "dev:css": "tailwindcss -i ./css/tailwind.css -o ./css/tailwind.build.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.1.12"
+  }
+}

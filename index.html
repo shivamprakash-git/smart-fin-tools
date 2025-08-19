@@ -29,44 +29,10 @@
             } catch (e) { /* no-op */ }
         })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/tailwind.build.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            200: '#c7d2fe',
-                            300: '#a5b4fc',
-                            400: '#818cf8',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            800: '#3730a3',
-                            900: '#312e81',
-                        },
-                        secondary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    
 </head>
 <body class="bg-gradient-to-br from-secondary-100 to-primary-100 dark:bg-none dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen">
     <div class="container mx-auto px-4 py-6">
@@ -166,33 +132,33 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Monthly Investment (₹)</label>
+                                <label for="sip-amount" id="sip-amount-label" class="block mb-2 font-medium">Monthly Investment (₹)</label>
                                 <input type="number" id="sip-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 5000" min="1" max="500000000" step="1" value="5000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1</span>
                                     <span>₹500,000,000</span>
                                 </div>
-                                <input type="range" min="1" max="500000000" step="1" value="5000" class="w-full mt-2 range-slider" id="sip-amount-range">
+                                <input type="range" min="1" max="500000000" step="1" value="5000" class="w-full mt-2 range-slider" id="sip-amount-range" aria-labelledby="sip-amount-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Investment Period (Years)</label>
+                                <label for="sip-period" id="sip-period-label" class="block mb-2 font-medium">Investment Period (Years)</label>
                                 <input type="number" id="sip-period" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10" min="1" max="100" step="0.5" value="10">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>100 Years</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.5" value="10" class="w-full mt-2 range-slider" id="sip-period-range">
+                                <input type="range" min="1" max="100" step="0.5" value="10" class="w-full mt-2 range-slider" id="sip-period-range" aria-labelledby="sip-period-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
+                                <label for="sip-rate" id="sip-rate-label" class="block mb-2 font-medium">Expected Return Rate (%)</label>
                                 <input type="number" id="sip-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 12" min="1" max="100" step="0.1" value="12">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>100%</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.1" value="12" class="w-full mt-2 range-slider" id="sip-rate-range">
+                                <input type="range" min="1" max="100" step="0.1" value="12" class="w-full mt-2 range-slider" id="sip-rate-range" aria-labelledby="sip-rate-label">
                             </div>
                             
                             <button id="calculate-sip" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
@@ -230,33 +196,33 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Investment Amount (₹)</label>
+                                <label for="lumpsum-amount" id="lumpsum-amount-label" class="block mb-2 font-medium">Investment Amount (₹)</label>
                                 <input type="number" id="lumpsum-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 100000" min="1" max="5000000000" step="1" value="100000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1</span>
                                     <span>₹5,000,000,000</span>
                                 </div>
-                                <input type="range" min="1" max="5000000000" step="1" value="100000" class="w-full mt-2 range-slider" id="lumpsum-amount-range">
+                                <input type="range" min="1" max="5000000000" step="1" value="100000" class="w-full mt-2 range-slider" id="lumpsum-amount-range" aria-labelledby="lumpsum-amount-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Investment Period (Years)</label>
+                                <label for="lumpsum-period" id="lumpsum-period-label" class="block mb-2 font-medium">Investment Period (Years)</label>
                                 <input type="number" id="lumpsum-period" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10" min="1" max="100" step="0.5" value="10">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>100 Years</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.5" value="10" class="w-full mt-2 range-slider" id="lumpsum-period-range">
+                                <input type="range" min="1" max="100" step="0.5" value="10" class="w-full mt-2 range-slider" id="lumpsum-period-range" aria-labelledby="lumpsum-period-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Expected Return Rate (%)</label>
+                                <label for="lumpsum-rate" id="lumpsum-rate-label" class="block mb-2 font-medium">Expected Return Rate (%)</label>
                                 <input type="number" id="lumpsum-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 12" min="1" max="100" step="0.1" value="12">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>100%</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.1" value="12" class="w-full mt-2 range-slider" id="lumpsum-rate-range">
+                                <input type="range" min="1" max="100" step="0.1" value="12" class="w-full mt-2 range-slider" id="lumpsum-rate-range" aria-labelledby="lumpsum-rate-label">
                             </div>
                             
                             <button id="calculate-lumpsum" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">
@@ -294,7 +260,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Amount (₹)</label>
+                                <label for="gst-amount" id="gst-amount-label" class="block mb-2 font-medium">Amount (₹)</label>
                                 <input type="number" id="gst-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 10000" min="1" max="5000000000" step="0.01" value="10000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1</span>
@@ -303,7 +269,7 @@
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">GST Rate (%)</label>
+                                <label for="gst-rate" id="gst-rate-label" class="block mb-2 font-medium">GST Rate (%)</label>
                                 <div class="grid grid-cols-4 gap-2 mb-3">
                                     <button data-rate="5" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">5%</button>
                                     <button data-rate="12" class="gst-rate-btn py-2 px-3 rounded-md font-medium transition bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">12%</button>
@@ -314,7 +280,7 @@
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Calculation Type</label>
+                                <p class="block mb-2 font-medium">Calculation Type</p>
                                 <div class="flex rounded-lg overflow-hidden">
                                     <button id="gst-add" aria-pressed="true" class="flex-1 py-3 rounded-none rounded-l-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-400/60">Add GST</button>
                                     <button id="gst-remove" aria-pressed="false" class="flex-1 py-3 rounded-none rounded-r-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-primary-400/40">Remove GST</button>
@@ -356,33 +322,33 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Loan Amount (₹)</label>
+                                <label for="emi-amount" id="emi-amount-label" class="block mb-2 font-medium">Loan Amount (₹)</label>
                                 <input type="number" id="emi-amount" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 500000" min="1" max="5000000000" step="1" value="500000">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>₹1</span>
                                     <span>₹5,000,000,000</span>
                                 </div>
-                                <input type="range" min="1" max="5000000000" step="1" value="500000" class="w-full mt-2 range-slider" id="emi-amount-range">
+                                <input type="range" min="1" max="5000000000" step="1" value="500000" class="w-full mt-2 range-slider" id="emi-amount-range" aria-labelledby="emi-amount-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Interest Rate (%)</label>
+                                <label for="emi-rate" id="emi-rate-label" class="block mb-2 font-medium">Interest Rate (%)</label>
                                 <input type="number" id="emi-rate" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 8.5" min="1" max="100" step="0.01" value="8.5">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1%</span>
                                     <span>100%</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.1" value="8.5" class="w-full mt-2 range-slider" id="emi-rate-range">
+                                <input type="range" min="1" max="100" step="0.1" value="8.5" class="w-full mt-2 range-slider" id="emi-rate-range" aria-labelledby="emi-rate-label">
                             </div>
                             
                             <div class="mb-5">
-                                <label class="block mb-2 font-medium">Loan Tenure (Years)</label>
+                                <label for="emi-tenure" id="emi-tenure-label" class="block mb-2 font-medium">Loan Tenure (Years)</label>
                                 <input type="number" id="emi-tenure" class="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-primary-300 focus:border-primary-500" placeholder="e.g. 20" min="1" max="100" step="0.5" value="20">
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span>1 Year</span>
                                     <span>100 Years</span>
                                 </div>
-                                <input type="range" min="1" max="100" step="0.5" value="20" class="w-full mt-2 range-slider" id="emi-tenure-range">
+                                <input type="range" min="1" max="100" step="0.5" value="20" class="w-full mt-2 range-slider" id="emi-tenure-range" aria-labelledby="emi-tenure-label">
                             </div>
                             
                             <button id="calculate-emi" class="w-full py-3 px-4 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-500 to-secondary-500 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-400/60">

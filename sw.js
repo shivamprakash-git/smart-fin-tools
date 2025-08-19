@@ -1,8 +1,9 @@
 /* Enhanced service worker for SmartFinTools */
-const CACHE_NAME = 'smartfin-cache-v3';
+const CACHE_NAME = 'smartfin-cache-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
+  './css/tailwind.build.css',
   './css/style.css',
   './js/script.js',
   './js/ticker.js',
