@@ -1,12 +1,10 @@
 /* Tailwind entry for SmartFinTools (Tailwind v4) */
-/* Declare sources so Tailwind can find classes in your HTML/JS */
 @source "../index.html";
 @source "../js/**/*.js";
 
-/* Use class-based dark mode: .dark on <html> or a parent */
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant hover (&:hover);
 
-/* Define project theme (colors) so utilities like text-primary-600 are generated */
 @theme {
   --color-primary-50:  #eef2ff;
   --color-primary-100: #e0e7ff;
