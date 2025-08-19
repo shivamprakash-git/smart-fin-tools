@@ -1,10 +1,11 @@
 /* Enhanced service worker for SmartFinTools */
-const CACHE_NAME = 'smartfin-cache-v2';
+const CACHE_NAME = 'smartfin-cache-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/script.js',
+  './js/ticker.js',
   './images/calculator.png',
   './manifest.webmanifest'
 ];
