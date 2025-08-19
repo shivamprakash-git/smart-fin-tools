@@ -88,9 +88,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for same-origin static assets
+  // Network-first for same-origin static assets (prefer fresh; fallback to cache when offline)
   if (url.origin === self.location.origin) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkFirst(request));
     return;
   }
 

@@ -12,6 +12,7 @@
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n);
   const fmtNum = (n, d = 4) => Number(n).toFixed(d);
   const nowTime = () => new Date().toLocaleTimeString();
+  const SNAPSHOT_KEY = 'ticker_snapshot_v1';
 
   // Display names
   const FX_NAMES = {
@@ -320,6 +321,12 @@
         throw new Error('No data available');
       }
 
+      // Persist snapshot for offline fallback
+      try {
+        const snapshot = { ts: Date.now(), items, sources };
+        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+      } catch (_) { /* ignore quota or serialization errors */ }
+
       // Render and animate
       renderItems(items);
       updateMeta(sources);
@@ -337,9 +344,35 @@
       startMarquee();
     } catch (err) {
       console.error(err);
+      // Try offline fallback from last snapshot
+      try {
+        const raw = localStorage.getItem(SNAPSHOT_KEY);
+        if (raw) {
+          const snap = JSON.parse(raw);
+          if (snap && Array.isArray(snap.items) && Array.isArray(snap.sources)) {
+            renderItems(snap.items);
+            const when = new Date(snap.ts).toLocaleString();
+            meta.textContent = `Last updated ${when} • Offline cache`;
+
+            // Ensure track styles and animation
+            track.style.display = 'inline-flex';
+            track.style.gap = '1rem';
+            track.style.whiteSpace = 'nowrap';
+            track.style.alignItems = 'center';
+            track.style.padding = '0';
+            track.style.margin = '0';
+            track.style.willChange = 'transform';
+            track.style.transform = 'translateX(0)';
+
+            startMarquee();
+            return; // done with offline render
+          }
+        }
+      } catch (_) { /* ignore parse errors */ }
+
+      // No snapshot available — show error message
       meta.textContent = 'Failed to fetch data';
-      track.innerHTML =
-        '<span class=\"text-xs text-rose-600 dark:text-rose-400\">Unable to load market ticker.</span>';
+      track.innerHTML = '<span class="text-xs text-rose-600 dark:text-rose-400">Unable to load market ticker.</span>';
     }
   }
 
