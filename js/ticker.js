@@ -180,7 +180,7 @@
   }
 
   function updateMeta(sources) {
-    meta.textContent = `Updated ${nowTime()} • Sources: ${sources.join(', ')}`;
+    meta.textContent = `Sources: ${sources.join(', ')}`;
   }
 
   // Simple marquee animation (seamless infinite loop)
