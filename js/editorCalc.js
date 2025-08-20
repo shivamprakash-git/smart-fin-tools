@@ -197,15 +197,19 @@ function setupBasicCalculator() {
       if (!fitsValue(out) && typeof result === 'number') {
         // Try reducing decimals
         if (!Number.isInteger(result)) {
-          for (let d = 9; d >= 0; d--) {
-            out = result.toFixed(d).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+          for (let d = 0; d <= 9; d++) {
+            out = result.toFixed(d)
+              .replace(/(\.\d*?)0+$/, '$1')
+              .replace(/\.$/, '');
             if (fitsValue(out)) break;
           }
         }
         // If still too long, try exponential with decreasing precision
         if (!fitsValue(out)) {
-          for (let d = 10; d >= 0; d--) {
-            out = result.toExponential(d).replace(/\.0+e/,'e');
+          for (let d = 0; d <= 10; d++) { // Changed to ascending order
+            out = result.toExponential(d)
+              .replace(/(\.\d*?)0+e/, '$1e') // Remove trailing zeros in mantissa
+              .replace(/\.e/, 'e'); // Handle whole numbers
             if (fitsValue(out)) break;
           }
         }
