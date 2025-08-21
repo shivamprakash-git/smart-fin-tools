@@ -6,7 +6,15 @@ function setupEditor() {
   if (!editor) return;
 
   const STORAGE_KEY = 'smartfin.editor.v1';
-  const stripTags = (s) => typeof s === 'string' ? s.replace(/<[^>]*>/g, '') : '';
+  const stripTags = (s) => {
+    if (typeof s !== 'string') return '';
+    let previous;
+    do {
+      previous = s;
+      s = s.replace(/<[^>]*>/g, '');
+    } while (s !== previous);
+    return s;
+  };
   const indicator = document.getElementById('editor-save-indicator');
   let savedIndicatorTimer;
   const showSaved = () => {
