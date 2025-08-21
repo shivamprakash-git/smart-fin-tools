@@ -410,85 +410,36 @@
             </div>
         </section>
 
-        <!-- Editor + Calculator Section (after charts) -->
-        <section id="clock-calc" class="group bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto mb-16 transition-all duration-300 hover:shadow-2xl motion-safe:animate-[fadeIn_0.6s_ease] hover:-translate-y-1 border border-gray-200 dark:border-gray-700">
-            <div class="flex flex-wrap justify-center gap-1 sm:gap-2 bg-gray-100 dark:bg-gray-700 py-2 px-1">
-                <span class="py-3 px-4 text-sm sm:text-base font-medium rounded-lg border-b-2 text-primary-600 dark:text-primary-400 border-primary-600 bg-primary-500/10">Utility: Editor & Calculator</span>
-            </div>
-            <div class="p-4 sm:p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Left: Text Editor -->
-                    <div>
-                        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 h-full transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg overflow-hidden shadow-md">
-                            <h3 class="text-xl font-semibold mb-4 text-center">Basic Text Editor</h3>
-                            <div class="space-y-3">
-                                <!-- Toolbar -->
-                                <div class="flex flex-wrap items-center justify-center gap-2">
-                                    <button class="px-2 py-1 rounded bg-rose-100 text-rose-700 hover:bg-rose-200" data-editor-act="clear" title="Clear">Clear</button>
-                                    <button class="px-2 py-1 rounded bg-primary-100 text-primary-700 hover:bg-primary-200" data-editor-act="download" title="Download .txt">Download</button>
-                                </div>
-                                <div class="flex justify-center">
-                                    <span id="editor-save-indicator" role="status" aria-live="polite" class="text-xs text-gray-500 dark:text-gray-400 opacity-0 transition-opacity duration-200">Saved ✓</span>
-                                </div>
-                                <!-- Editor Area -->
-                                <textarea id="editor-area" class="h-[15rem] w-full rounded-lg border border-gray-300 dark:border-gray-700 p-3 bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 focus:outline-none resize-y overflow-auto" aria-label="Text editor" spellcheck="false"></textarea>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Autosaves locally. Plain text editor with Clear and Download.</p>
-                            </div>
+        <!-- RSS Feeds Section -->
+        <section id="rss-feeds" class="max-w-4xl mx-auto mb-16">
+            <h2 class="text-3xl text-center font-bold mb-8 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">Financial Market Updates</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Market Pulse Feed -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Market Pulse</h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">Live Updates</span>
                         </div>
                     </div>
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700" id="market-feed">
+                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Loading market updates...
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Right: Basic Calculator -->
-                    <div>
-                        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 h-full transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg overflow-hidden shadow-md">
-                            <h3 class="text-xl font-semibold mb-4 text-center">Basic Calculator</h3>
-                            <div class="space-y-3">
-                                <!-- Display -->
-                                <div class="rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-3">
-                                    <div id="calc-history" class="h-5 text-xs text-right text-gray-500 dark:text-gray-400 truncate"></div>
-                                    <input id="calc-display" type="text" inputmode="none" tabindex="0" aria-readonly="true" class="w-full bg-transparent text-right text-2xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none overflow-hidden caret-primary-500" placeholder="0" aria-label="Calculator input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-                                    
-                                </div>
-                                <!-- Caret navigation controls -->
-                                <div class="grid grid-cols-3 items-center -mt-1 mb-1">
-                                    <div class="justify-self-start">
-                                        <button id="calc-prev" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95" title="Move cursor left"><i class="fas fa-caret-left mr-1"></i>Prev</button>
-                                    </div>
-                                    <span id="calc-caret-pos" class="justify-self-center text-xs text-gray-600 dark:text-gray-400">Pos: 0</span>
-                                    <div class="justify-self-end">
-                                        <button id="calc-next" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95" title="Move cursor right">Next<i class="fas fa-caret-right ml-1"></i></button>
-                                    </div>
-                                </div>
-                                <!-- Buttons -->
-                                <div class="grid grid-cols-4 gap-2 select-none">
-                                    <button data-key="C" class="py-3 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 active:scale-95">C</button>
-                                    <button data-key="(" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">(</button>
-                                    <button data-key=")" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">)</button>
-                                    <button data-key="%" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">%</button>
-
-                                    <button data-key="7" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">7</button>
-                                    <button data-key="8" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">8</button>
-                                    <button data-key="9" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">9</button>
-                                    <button data-key="/" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">÷</button>
-
-                                    <button data-key="4" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">4</button>
-                                    <button data-key="5" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">5</button>
-                                    <button data-key="6" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">6</button>
-                                    <button data-key="*" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">×</button>
-
-                                    <button data-key="1" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">1</button>
-                                    <button data-key="2" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">2</button>
-                                    <button data-key="3" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">3</button>
-                                    <button data-key="-" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">−</button>
-
-                                    <button data-key="0" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">0</button>
-                                    <button data-key="." class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">.</button>
-                                    <button data-key="BS" class="py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
-                                    <button data-key="+" class="py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95">+</button>
-
-                                    <button data-key="EQ" class="col-span-4 py-3 rounded-lg text-white font-medium transition bg-gradient-to-br from-primary-600 to-secondary-600 hover:-translate-y-0.5 hover:shadow-xl active:scale-95">=</button>
-                                </div>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Supports (), %, and standard operator precedence (BODMAS). Use on-screen buttons only.</p>
-                            </div>
+                <!-- Mutual Fund Guidance Feed -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Mutual Fund Insights</h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 dark:bg-secondary-900/40 dark:text-secondary-300">Expert Analysis</span>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700" id="mutual-fund-feed">
+                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Loading mutual fund insights...
                         </div>
                     </div>
                 </div>
@@ -536,7 +487,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/editorCalc.js"></script>
+    <script src="js/rssFeeds.js"></script>
     <script src="js/ticker.js"></script>
     <script>
       // Register Service Worker as early as possible after scripts load
