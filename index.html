@@ -129,7 +129,7 @@
             <div class="p-4 sm:p-6">
                 <!-- SIP Calculator -->
                 <div id="sip-calculator" class="calculator-section">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" style="min-height: 500px;">
                         <div>
                             <div class="mb-5">
                                 <label for="sip-amount" id="sip-amount-label" class="block mb-2 font-medium">Monthly Investment (₹)</label>
@@ -410,36 +410,40 @@
             </div>
         </section>
 
-        <!-- RSS Feeds Section -->
-        <section id="rss-feeds" class="max-w-4xl mx-auto mb-16">
-            <h2 class="text-3xl text-center font-bold mb-8 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">Financial Market Updates</h2>
+        <!-- Market News Section -->
+        <section id="market-news" class="max-w-4xl mx-auto mb-16">
+            <h2 class="text-3xl text-center font-bold mb-8 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">Financial Market Insights</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Market Pulse Feed -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- TradingView News Widget -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-[fadeIn_0.5s_ease] transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
                     <div class="bg-gray-100 dark:bg-gray-700 p-4">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Market Pulse</h3>
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Market News</h3>
                             <span class="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">Live Updates</span>
                         </div>
                     </div>
-                    <div class="divide-y divide-gray-200 dark:divide-gray-700" id="market-feed">
-                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-spinner fa-spin mr-2"></i> Loading market updates...
+                    <div id="tradingview-news-widget" class="pb-0" style="height: 476px;">
+                        <div class="flex items-center justify-center h-full">
+                            <div class="animate-pulse text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-spinner fa-spin mr-2"></i> Loading market news...
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mutual Fund Guidance Feed -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- Technical Analysis -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-[fadeIn_0.5s_ease] transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
                     <div class="bg-gray-100 dark:bg-gray-700 p-4">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Mutual Fund Insights</h3>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 dark:bg-secondary-900/40 dark:text-secondary-300">Expert Analysis</span>
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Technical Analysis</h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">NIFTY</span>
                         </div>
                     </div>
-                    <div class="divide-y divide-gray-200 dark:divide-gray-700" id="mutual-fund-feed">
-                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-spinner fa-spin mr-2"></i> Loading mutual fund insights...
+                    <div id="tradingview-technical-widget" class="w-full" style="height: 476px;">
+                        <div class="flex items-center justify-center h-full">
+                            <div class="animate-pulse text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-spinner fa-spin mr-2"></i> Loading technical analysis...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -447,7 +451,7 @@
         </section>
 
         <!-- About Section -->
-        <section id="about" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease]">
+        <section id="about" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease] transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
             <h2 class="text-2xl font-bold mb-3">About</h2>
             <p class="text-gray-700 dark:text-gray-300">
                 SmartFinTools is a simple, modern financial calculator suite. Quickly estimate SIP growth, lumpsum returns, GST amounts, and loan EMIs with clean visuals and intuitive controls.
@@ -455,7 +459,7 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease]">
+        <section id="contact" class="max-w-4xl mx-auto mb-16 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 scroll-mt-24 md:scroll-mt-32 motion-safe:animate-[fadeIn_0.6s_ease] transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
             <h2 class="text-2xl font-bold mb-3">Contact</h2>
             <div class="space-y-1 text-gray-700 dark:text-gray-300">
                 <p><span class="font-semibold">Name:</span> Shivam Prakash</p>
@@ -487,7 +491,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/rssFeeds.js"></script>
+    <script src="js/utility.js"></script>
     <script src="js/ticker.js"></script>
     <script>
       // Register Service Worker as early as possible after scripts load
