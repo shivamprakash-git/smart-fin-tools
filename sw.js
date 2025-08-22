@@ -6,6 +6,7 @@ const CORE_ASSETS = [
   './css/tailwind.build.css',
   './css/style.css',
   './js/script.js',
+  './js/utility.js',
   './js/ticker.js',
   './images/calculator.png',
   './manifest.webmanifest'
