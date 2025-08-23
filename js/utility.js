@@ -25,7 +25,7 @@ function initializeTradingViewNews() {
         "feedMode": "all_symbols",
         "colorTheme": isDarkMode ? "dark" : "light",
         "isTransparent": true,
-        "locale": "en",
+        "locale": "in",
         "width": "100%",
         "height": "100%"
     });
@@ -63,8 +63,8 @@ function initializeTradingViewTechnical() {
         "colorTheme": isDarkMode ? "dark" : "light",
         "displayMode": "single",
         "isTransparent": true,
-        "locale": "en",
-        "interval": "1m",
+        "locale": "in",
+        "interval": "1D",
         "disableInterval": false,
         "width": "100%",
         "height": "100%",
@@ -79,7 +79,57 @@ function initializeTradingViewTechnical() {
     return container;
 }
 
+// TradingView Ticker Widget Initialization
+function initializeTradingViewTicker() {
+    const container = document.createElement('div');
+    container.className = 'tradingview-widget-container';
+    container.innerHTML = `
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright">
+            <a href="https://in.tradingview.com/" rel="noopener nofollow" target="_blank">
+                <span class="blue-text">Track all markets on TradingView</span>
+            </a>
+        </div>
+    `;
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+    script.async = true;
+    
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    
+    script.text = JSON.stringify({
+        "symbols": [
+            {"proName": "BSE:SENSEX", "title": "BSE SENSEX (₹)"},
+            {"proName": "TVC:USOIL", "title": "US Crude Oil ($)"},
+            {"proName": "TVC:GOLD", "title": "US Gold ($)"},
+            {"proName": "FX_IDC:USDINR", "title": "US Dollar to INR (₹)"},
+            {"proName": "FX_IDC:EURINR", "title": "Euro to INR (₹)"},
+            {"proName": "FX_IDC:GBPINR", "title": "British Pound to INR (₹)"},
+            {"proName": "FX_IDC:AEDINR", "title": "UAE Dirham to INR (₹)"}
+        ],
+        "colorTheme": isDarkMode ? "dark" : "light",
+        "isTransparent": true,
+        "showSymbolLogo": true,
+        "locale": "in",
+        "largeChartUrl": "",
+        "displayMode": "adaptive"
+    });
+
+    container.appendChild(script);
+    return container;
+}
+
 function initializeWidgets() {
+    // Initialize Ticker Widget
+    const tickerContainer = document.getElementById('tradingview-ticker-widget');
+    if (tickerContainer) {
+        const tickerWidget = initializeTradingViewTicker();
+        tickerContainer.innerHTML = '';
+        tickerContainer.appendChild(tickerWidget);
+    }
+    
     // Initialize News Widget
     const newsContainer = document.getElementById('tradingview-news-widget');
     if (newsContainer) {
