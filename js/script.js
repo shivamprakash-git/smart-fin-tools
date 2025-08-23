@@ -1123,6 +1123,7 @@ function initializeApp() {
         setupLumpsumCalculator();
         setupGSTCalculator();
         setupEMICalculator();
+        setupHomeLinks();
         setupSliderGlobalToggle();
         setupInputFocusScroll();
 
@@ -1184,6 +1185,28 @@ if (document.readyState === 'loading') {
 } else {
     // DOMContentLoaded has already fired
     initializeApp();
+}
+
+// Smooth scroll to top for home links
+function setupHomeLinks() {
+    const homeLinks = [
+        document.getElementById('home-link'),
+        document.getElementById('footer-home-link')
+    ];
+
+    homeLinks.forEach(link => {
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                // Update URL without adding to history
+                history.pushState(null, null, ' ');
+            });
+        }
+    });
 }
 
 // Mobile menu toggle
