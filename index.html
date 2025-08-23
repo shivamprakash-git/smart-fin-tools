@@ -16,25 +16,19 @@
     <link rel="icon" type="image/png" sizes="192x192" href="images/icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="images/icons/icon-512.png">
     <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon-180.png">
-    <script>
-        // Early theme initialization to avoid light-mode flash on refresh
-        (function () {
-            try {
-                const stored = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const shouldDark = stored === 'dark' || (!stored && prefersDark);
-                const root = document.documentElement;
-                if (shouldDark) root.classList.add('dark');
-                else root.classList.remove('dark');
-            } catch (e) { /* no-op */ }
-        })();
-    </script>
     <link rel="stylesheet" href="css/tailwind.build.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
 </head>
-<body class="bg-gradient-to-br from-secondary-100 to-primary-100 dark:bg-none dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen">
+<body class="bg-gradient-to-br from-secondary-100 to-primary-100 dark:bg-none dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen opacity-0" style="visibility: hidden;">
+    <!-- Loading indicator -->
+    <div id="loading" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-gray-700 dark:text-gray-300">Loading SmartFinTools...</p>
+        </div>
+    </div>
     <div class="container mx-auto px-4 py-6">
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center py-6 mb-8 border-b border-gray-300 dark:border-gray-700">
@@ -490,14 +484,22 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/script.js"></script>
+    <!-- Load utility functions first -->
     <script src="js/utility.js"></script>
+    <!-- Then load the main application -->
+    <script src="js/script.js"></script>
+    <!-- Finally load the ticker -->
     <script src="js/ticker.js"></script>
     <script>
       // Register Service Worker as early as possible after scripts load
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(console.error);
+          try {
+            navigator.serviceWorker.register('./sw.js')
+              .catch(error => console.log('ServiceWorker registration failed, but app will still work offline:', error));
+          } catch (e) {
+            console.log('ServiceWorker registration failed, but app will still work offline:', e);
+          }
         });
       }
     </script>

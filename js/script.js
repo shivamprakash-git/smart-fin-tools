@@ -2,15 +2,40 @@
 const themeToggle = document.getElementById('theme-toggle');
 const htmlElement = document.documentElement;
 
-// Check for saved theme preference or respect OS preference
-if (localStorage.getItem('theme') === 'dark' || 
-    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    htmlElement.classList.add('dark');
-    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-} else {
-    htmlElement.classList.remove('dark');
-    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-}
+// Check if localStorage is available
+const storageAvailable = (() => {
+    try {
+        const test = '__storage_test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch (e) {
+        return false;
+    }
+})();
+
+// Get theme preference with fallback to OS preference
+const getPreferredTheme = () => {
+    if (storageAvailable) {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) return savedTheme;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+// Apply theme
+const applyTheme = (theme) => {
+    if (theme === 'dark') {
+        htmlElement.classList.add('dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        htmlElement.classList.remove('dark');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+};
+
+// Initialize theme
+applyTheme(getPreferredTheme());
 
 // Ensure focused inputs are visible on mobile (avoid being hidden by keyboard)
 function setupInputFocusScroll() {
@@ -193,14 +218,20 @@ function setupInputFocusScroll() {
 }
 
 themeToggle.addEventListener('click', () => {
-    htmlElement.classList.toggle('dark');
-    if (htmlElement.classList.contains('dark')) {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    } else {
-        localStorage.setItem('theme', 'light');
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    const isDark = htmlElement.classList.toggle('dark');
+    const theme = isDark ? 'dark' : 'light';
+    
+    // Only try to save if storage is available
+    if (storageAvailable) {
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            console.log('Could not save theme preference');
+        }
     }
+    
+    // Update icon
+    themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
 });
 
 // Global slider enable/disable toggle (off by default)
@@ -239,11 +270,20 @@ function setupSliderGlobalToggle() {
             knob.classList.toggle('translate-x-5', enabled);
             knob.classList.toggle('translate-x-0', !enabled);
         }
-        try { localStorage.setItem('sliders-enabled', enabled ? '1' : '0'); } catch (e) {}
+        if (storageAvailable) {
+            try {
+                localStorage.setItem('sliders-enabled', enabled ? '1' : '0');
+            } catch (e) {
+                console.log('Could not save slider preference');
+            }
+        }
     };
 
     // Default: disabled unless explicitly enabled previously
-    const saved = (() => { try { return localStorage.getItem('sliders-enabled'); } catch (e) { return null; } })();
+    const saved = storageAvailable ? (() => {
+        try { return localStorage.getItem('sliders-enabled'); } 
+        catch (e) { return null; }
+    })() : null;
     const initialEnabled = saved === '1';
 
     if (toggle) {
@@ -1066,25 +1106,85 @@ function setupEMICalculator() {
 }
 
 // Initialize all calculators
-document.addEventListener('DOMContentLoaded', () => {
-    setupMobileMenu();
-    setupSIPCalculator();
-    setupLumpsumCalculator();
-    setupGSTCalculator();
-    setupEMICalculator();
-    setupSliderGlobalToggle();
-    setupInputFocusScroll();
-
-    // Ensure initial charts reflect the active tab's values
-    const activeBtn = document.querySelector('.tab-btn[aria-selected="true"]');
-    const fallbackBtn = activeBtn || document.querySelector('.tab-btn');
-    if (fallbackBtn) {
-        const tabName = fallbackBtn.getAttribute('data-tab');
-        if (window._recalc && typeof window._recalc[tabName] === 'function') {
-            window._recalc[tabName]();
-        }
+function initializeApp() {
+    // Hide any error messages
+    const existingError = document.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
     }
-});
+
+    try {
+        // Initialize theme first
+        applyTheme(getPreferredTheme());
+        
+        // Setup all components
+        setupMobileMenu();
+        setupSIPCalculator();
+        setupLumpsumCalculator();
+        setupGSTCalculator();
+        setupEMICalculator();
+        setupSliderGlobalToggle();
+        setupInputFocusScroll();
+
+        // Ensure initial charts reflect the active tab's values
+        const activeBtn = document.querySelector('.tab-btn[aria-selected="true"]');
+        const fallbackBtn = activeBtn || document.querySelector('.tab-btn');
+        if (fallbackBtn) {
+            const tabName = fallbackBtn.getAttribute('data-tab');
+            if (window._recalc && typeof window._recalc[tabName] === 'function') {
+                window._recalc[tabName]();
+            }
+        }
+        
+        // Show the app content and hide loading indicator
+        const loadingIndicator = document.getElementById('loading');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        document.body.classList.remove('opacity-0');
+        document.body.style.visibility = 'visible';
+        
+        // Force a reflow to ensure transitions work
+        document.body.offsetHeight;
+        
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        
+        // Hide loading indicator
+        const loadingIndicator = document.getElementById('loading');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        
+        // Show error message to user
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message fixed top-0 left-0 right-0 bg-red-100 border-b border-red-500 text-red-700 p-4 z-50';
+        errorDiv.innerHTML = `
+            <div class="container mx-auto flex justify-between items-center">
+                <div>
+                    <p class="font-bold">Error Loading Application</p>
+                    <p>Some features may not work as expected. ${error.message || 'Please refresh the page.'}</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-red-700 hover:text-red-900">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        document.body.prepend(errorDiv);
+        
+        // Still show the app content even if there was an error
+        document.body.classList.remove('opacity-0');
+        document.body.style.visibility = 'visible';
+    }
+}
+
+// Start the app when the DOM is fully loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    // DOMContentLoaded has already fired
+    initializeApp();
+}
 
 // Mobile menu toggle
 function setupMobileMenu() {

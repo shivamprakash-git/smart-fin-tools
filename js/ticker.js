@@ -14,6 +14,18 @@
   const nowTime = () => new Date().toLocaleTimeString();
   const SNAPSHOT_KEY = 'ticker_snapshot_v1';
 
+  // Check if storage is available
+  const isStorageAvailable = (() => {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  })();
+
   // Display names
   const FX_NAMES = {
     'USD/INR': 'US Dollar',
@@ -322,10 +334,23 @@
       }
 
       // Persist snapshot for offline fallback
-      try {
-        const snapshot = { ts: Date.now(), items, sources };
-        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
-      } catch (_) { /* ignore quota or serialization errors */ }
+      if (isStorageAvailable) {
+        try {
+          const snapshot = { 
+            ts: Date.now(), 
+            items: items.map(({ symbol, price, change, changePct }) => ({
+              symbol,
+              price,
+              change,
+              changePct
+            })),
+            sources: [...sources]
+          };
+          localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+        } catch (e) {
+          console.warn('Could not save ticker snapshot:', e);
+        }
+      }
 
       // Render and animate
       renderItems(items);
@@ -343,35 +368,54 @@
 
       startMarquee();
     } catch (err) {
-      console.error(err);
-      // Try offline fallback from last snapshot
-      try {
-        const raw = localStorage.getItem(SNAPSHOT_KEY);
-        if (raw) {
+      console.error('Error in ticker initialization:', err);
+      
+      // Try offline fallback from last snapshot if storage is available
+      const loadFromCache = () => {
+        if (!isStorageAvailable) return false;
+        
+        try {
+          const raw = localStorage.getItem(SNAPSHOT_KEY);
+          if (!raw) return false;
+          
           const snap = JSON.parse(raw);
-          if (snap && Array.isArray(snap.items) && Array.isArray(snap.sources)) {
-            renderItems(snap.items);
-            if (Array.isArray(snap.sources) && snap.sources.length) {
-              meta.textContent = `Sources: ${snap.sources.join(', ')} • Offline cache`;
-            } else {
-              meta.textContent = 'Offline cache';
-            }
-
-            // Ensure track styles and animation
-            track.style.display = 'inline-flex';
-            track.style.gap = '1rem';
-            track.style.whiteSpace = 'nowrap';
-            track.style.alignItems = 'center';
-            track.style.padding = '0';
-            track.style.margin = '0';
-            track.style.willChange = 'transform';
-            track.style.transform = 'translateX(0)';
-
-            startMarquee();
-            return; // done with offline render
+          // Validate snapshot structure and data freshness (max 24h old)
+          const isFresh = snap?.ts && (Date.now() - snap.ts) < 24 * 60 * 60 * 1000;
+          if (!isFresh || !snap.items || !snap.sources || 
+              !Array.isArray(snap.items) || !Array.isArray(snap.sources)) {
+            return false;
           }
+          
+          // Render cached data
+          renderItems(snap.items);
+          meta.textContent = snap.sources?.length 
+            ? `Sources: ${snap.sources.join(', ')} • Offline cache`
+            : 'Offline cache';
+            
+          // Apply track styles and start animation
+          Object.assign(track.style, {
+            display: 'inline-flex',
+            gap: '1rem',
+            whiteSpace: 'nowrap',
+            alignItems: 'center',
+            padding: '0',
+            margin: '0',
+            willChange: 'transform',
+            transform: 'translateX(0)'
+          });
+          
+          startMarquee();
+          return true;
+          
+        } catch (e) {
+          console.warn('Error loading from cache:', e);
+          return false;
         }
-      } catch (_) { /* ignore parse errors */ }
+      };
+      
+      // Try to load from cache
+      const cacheLoaded = loadFromCache();
+      if (cacheLoaded) return;
 
       // No snapshot available — show error message
       meta.textContent = 'Failed to fetch data';
