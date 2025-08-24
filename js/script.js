@@ -52,17 +52,47 @@ function initializeApp() {
         setupInputFocusScroll();
         setupTabSwitching();
 
-        // Listen for tab changes and trigger initial calculation
+        // Listen for tab changes and trigger calculation with charts for the selected tab
         document.addEventListener('calculator-tab-changed', (event) => {
             const { tabName } = event.detail;
-            // Trigger calculation for the newly selected tab
-            const calculatorSection = document.getElementById(`${tabName}-calculator`);
-            if (calculatorSection) {
-                // Find and trigger the calculate button if it exists
-                const calculateBtn = calculatorSection.querySelector(`#calculate-${tabName}`);
-                if (calculateBtn) {
-                    calculateBtn.click();
-                }
+            // Trigger calculation for the newly selected tab to update charts
+            switch(tabName) {
+                case 'sip':
+                    // Trigger SIP calculation to update charts
+                    const sipAmount = document.getElementById('sip-amount');
+                    const sipPeriod = document.getElementById('sip-period');
+                    const sipRate = document.getElementById('sip-rate');
+                    if (sipAmount && sipPeriod && sipRate) {
+                        // Simulate input event to trigger calculation with charts
+                        sipAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'lumpsum':
+                    // Trigger lumpsum calculation to update charts
+                    const lumpsumAmount = document.getElementById('lumpsum-amount');
+                    const lumpsumPeriod = document.getElementById('lumpsum-period');
+                    const lumpsumRate = document.getElementById('lumpsum-rate');
+                    if (lumpsumAmount && lumpsumPeriod && lumpsumRate) {
+                        lumpsumAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'gst':
+                    // Trigger GST calculation to update charts
+                    const gstAmount = document.getElementById('gst-amount');
+                    const gstRateInput = document.getElementById('gst-rate');
+                    if (gstAmount && gstRateInput) {
+                        gstAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'emi':
+                    // Trigger EMI calculation to update charts
+                    const emiAmount = document.getElementById('emi-amount');
+                    const emiRate = document.getElementById('emi-rate');
+                    const emiTenure = document.getElementById('emi-tenure');
+                    if (emiAmount && emiRate && emiTenure) {
+                        emiAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
             }
         });
 
@@ -70,13 +100,39 @@ function initializeApp() {
         const activeBtn = document.querySelector('.tab-btn[aria-selected="true"]');
         if (activeBtn) {
             const tabName = activeBtn.getAttribute('data-tab');
-            // Trigger initial calculation for the active tab
-            const calculatorSection = document.getElementById(`${tabName}-calculator`);
-            if (calculatorSection) {
-                const calculateBtn = calculatorSection.querySelector(`#calculate-${tabName}`);
-                if (calculateBtn) {
-                    calculateBtn.click();
-                }
+            // Trigger initial calculation for the active tab to show correct charts
+            switch(tabName) {
+                case 'sip':
+                    const sipAmount = document.getElementById('sip-amount');
+                    const sipPeriod = document.getElementById('sip-period');
+                    const sipRate = document.getElementById('sip-rate');
+                    if (sipAmount && sipPeriod && sipRate) {
+                        sipAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'lumpsum':
+                    const lumpsumAmount = document.getElementById('lumpsum-amount');
+                    const lumpsumPeriod = document.getElementById('lumpsum-period');
+                    const lumpsumRate = document.getElementById('lumpsum-rate');
+                    if (lumpsumAmount && lumpsumPeriod && lumpsumRate) {
+                        lumpsumAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'gst':
+                    const gstAmount = document.getElementById('gst-amount');
+                    const gstRateInput = document.getElementById('gst-rate');
+                    if (gstAmount && gstRateInput) {
+                        gstAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
+                case 'emi':
+                    const emiAmount = document.getElementById('emi-amount');
+                    const emiRate = document.getElementById('emi-rate');
+                    const emiTenure = document.getElementById('emi-tenure');
+                    if (emiAmount && emiRate && emiTenure) {
+                        emiAmount.dispatchEvent(new Event('input'));
+                    }
+                    break;
             }
         }
         

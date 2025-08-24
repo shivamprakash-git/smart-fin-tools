@@ -110,6 +110,22 @@ export function setupGSTCalculator() {
         });
     }
     
-    // Initial calculation
-    calculateGST();
+    // Initial calculation (without charts - will be updated when user interacts)
+    const amount = parseFloat(gstAmount.value) || 0;
+    const rate = parseFloat(gstRateInput.value) || 0;
+    
+    if (amount > 0 && rate > 0) {
+        const original = amount;
+        const tax = amount * (rate / 100);
+        const net = original + tax;
+        
+        document.getElementById('gst-original').textContent = formatCurrencyOrInfinity(original);
+        document.getElementById('gst-tax').textContent = formatCurrencyOrInfinity(tax);
+        document.getElementById('gst-net').textContent = formatCurrencyOrInfinity(net);
+    }
+    
+    // Ensure button state is properly initialized
+    // The Add GST button should be active by default (as per HTML)
+    gstAddBtn.setAttribute('aria-pressed', 'true');
+    gstRemoveBtn.setAttribute('aria-pressed', 'false');
 }

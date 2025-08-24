@@ -123,6 +123,20 @@ export function setupSIPCalculator() {
         });
     }
     
-    // Initial calculation
-    calculateSIP();
+    // Initial calculation (without charts - will be updated when user interacts)
+    const amount = parseFloat(sipAmount.value) || 0;
+    const period = parseFloat(sipPeriod.value) || 0;
+    const rate = parseFloat(sipRate.value) || 0;
+    
+    if (amount > 0 && period > 0 && rate > 0) {
+        const months = period * 12;
+        const monthlyRate = rate / 100 / 12;
+        const futureValue = amount * (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+        const invested = amount * months;
+        const returns = futureValue - invested;
+        
+        document.getElementById('sip-invested').textContent = formatCurrencyOrInfinity(invested);
+        document.getElementById('sip-returns').textContent = formatCurrencyOrInfinity(returns);
+        document.getElementById('sip-total').textContent = formatCurrencyOrInfinity(futureValue);
+    }
 }

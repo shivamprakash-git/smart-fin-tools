@@ -115,6 +115,17 @@ export function setupLumpsumCalculator() {
         });
     }
     
-    // Initial calculation
-    calculateLumpsum();
+    // Initial calculation (without charts - will be updated when user interacts)
+    const amount = parseFloat(lumpsumAmount.value) || 0;
+    const period = parseFloat(lumpsumPeriod.value) || 0;
+    const rate = parseFloat(lumpsumRate.value) || 0;
+    
+    if (amount > 0 && period > 0 && rate > 0) {
+        const futureValue = amount * Math.pow(1 + rate/100, period);
+        const returns = futureValue - amount;
+        
+        document.getElementById('lumpsum-invested').textContent = formatCurrencyOrInfinity(amount);
+        document.getElementById('lumpsum-returns').textContent = formatCurrencyOrInfinity(returns);
+        document.getElementById('lumpsum-total').textContent = formatCurrencyOrInfinity(futureValue);
+    }
 }

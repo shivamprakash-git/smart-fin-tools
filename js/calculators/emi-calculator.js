@@ -113,6 +113,20 @@ export function setupEMICalculator() {
         // No crossover/highlight needed for totals bar chart
     }
     
-    // Initial calculation
-    calculateEMI();
+    // Initial calculation (without charts - will be updated when user interacts)
+    const amount = parseFloat(emiAmount.value) || 0;
+    const rate = parseFloat(emiRate.value) || 0;
+    const tenure = parseFloat(emiTenure.value) || 0;
+    
+    if (amount > 0 && rate > 0 && tenure > 0) {
+        const monthlyRate = rate / 100 / 12;
+        const months = tenure * 12;
+        const emi = amount * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1);
+        const totalPayment = emi * months;
+        const totalInterest = totalPayment - amount;
+        
+        document.getElementById('emi-monthly').textContent = formatCurrencyOrInfinity(emi);
+        document.getElementById('emi-interest').textContent = formatCurrencyOrInfinity(totalInterest);
+        document.getElementById('emi-total').textContent = formatCurrencyOrInfinity(totalPayment);
+    }
 }
