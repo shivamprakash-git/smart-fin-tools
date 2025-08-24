@@ -3,12 +3,6 @@
 @source "../js/**/*.js";
 
 @custom-variant dark (&:where(.dark, .dark *));
-@custom-variant hover (&:hover);
-@custom-variant focus (&:focus);
-@custom-variant active (&:active);
-@custom-variant transition (&:where(.transition, .transition-*));
-@custom-variant duration (&:where(.duration-*, [class*="duration-"]));
-@custom-variant ease (&:where(.ease-*, [class*="ease-"]));
 
 @theme {
   --color-primary-50:  #eef2ff;
