@@ -14,6 +14,9 @@ const storageAvailable = (() => {
     }
 })();
 
+// Check if theme was already set by the inline script
+const themeAlreadySet = document.documentElement.classList.contains('dark');
+
 // Get theme preference with fallback to OS preference
 const getPreferredTheme = () => {
     if (storageAvailable) {
@@ -34,8 +37,10 @@ const applyTheme = (theme) => {
     }
 };
 
-// Initialize theme
-applyTheme(getPreferredTheme());
+// Initialize theme if not already set by inline script
+if (!themeAlreadySet) {
+    applyTheme(getPreferredTheme());
+}
 
 // Ensure focused inputs are visible on mobile (avoid being hidden by keyboard)
 function setupInputFocusScroll() {
@@ -217,22 +222,34 @@ function setupInputFocusScroll() {
     }
 }
 
-themeToggle.addEventListener('click', () => {
-    const isDark = htmlElement.classList.toggle('dark');
-    const theme = isDark ? 'dark' : 'light';
+if (themeToggle) {
+    // Set initial icon based on current theme
+    updateThemeIcon(htmlElement.classList.contains('dark'));
     
-    // Only try to save if storage is available
-    if (storageAvailable) {
-        try {
-            localStorage.setItem('theme', theme);
-        } catch (e) {
-            console.log('Could not save theme preference');
+    themeToggle.addEventListener('click', () => {
+        const isDark = htmlElement.classList.toggle('dark');
+        const theme = isDark ? 'dark' : 'light';
+        
+        // Only try to save if storage is available
+        if (storageAvailable) {
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (e) {
+                console.log('Could not save theme preference');
+            }
         }
+        
+        // Update icon
+        updateThemeIcon(isDark);
+    });
+}
+
+function updateThemeIcon(isDark) {
+    if (themeToggle) {
+        themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
     }
-    
-    // Update icon
-    themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-});
+}
 
 // Global slider enable/disable toggle (off by default)
 function setupSliderGlobalToggle() {

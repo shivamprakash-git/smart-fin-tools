@@ -20,6 +20,24 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Set theme immediately to prevent flash -->
+    <script>
+        // Check for saved theme preference or use OS preference
+        (function() {
+            try {
+                const html = document.documentElement;
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                // Apply theme immediately
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    html.classList.add('dark');
+                }
+            } catch (e) {
+                console.log('Could not set initial theme');
+            }
+        })();
+    </script>
 </head>
 <body class="bg-gradient-to-br from-secondary-100 to-primary-100 dark:bg-none dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen opacity-0" style="visibility: hidden;">
     <!-- Loading indicator -->
@@ -485,10 +503,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Load utility functions first -->
-    <script src="js/utility.js"></script>
-    <!-- Then load the main application -->
     <script src="js/script.js"></script>
+    <script src="js/utility.js"></script>
     <script>
       // Register Service Worker as early as possible after scripts load
       if ('serviceWorker' in navigator) {
