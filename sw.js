@@ -190,7 +190,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // For Chart.js CDN, use stale-while-revalidate
-  if (url.origin.includes('cdn.jsdelivr.net') && url.pathname.includes('chart.js')) {
+  if (url.origin === 'https://cdn.jsdelivr.net' && url.pathname.includes('chart.js')) {
     event.respondWith(staleWhileRevalidate(request));
     return;
   }
