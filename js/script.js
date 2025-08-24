@@ -2,28 +2,32 @@
 const themeToggle = document.getElementById('theme-toggle');
 const htmlElement = document.documentElement;
 
-// Check if localStorage is available
-const storageAvailable = (() => {
-    try {
-        const test = '__storage_test__';
-        localStorage.setItem(test, test);
-        localStorage.removeItem(test);
-        return true;
-    } catch (e) {
-        return false;
-    }
-})();
+// Check if localStorage is available and accessible
+let storageAvailable = false;
+try {
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    storageAvailable = localStorage.getItem(test) === test;
+    localStorage.removeItem(test);
+} catch (e) {
+    storageAvailable = false;
+}
 
 // Check if theme was already set by the inline script
-const themeAlreadySet = document.documentElement.classList.contains('dark');
+const themeAlreadySet = document.documentElement.getAttribute('data-theme-initialized') === 'true';
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 // Get theme preference with fallback to OS preference
 const getPreferredTheme = () => {
     if (storageAvailable) {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) return savedTheme;
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) return savedTheme;
+        } catch (e) {
+            console.log('Could not read theme preference');
+        }
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return prefersDark ? 'dark' : 'light';
 };
 
 // Apply theme
@@ -127,32 +131,7 @@ function setupInputFocusScroll() {
         if (!el.matches('input, textarea, select')) return;
         activeEl = el;
 
-        // Tailored handling for large editor to avoid bounce on mobile
-        if (el.id === 'editor-area') {
-            clearTimeout(scheduleTimer);
-            scheduleTimer = setTimeout(() => {
-                requestAnimationFrame(() => {
-                    const rect = el.getBoundingClientRect();
-                    const viewportHeight = vv ? vv.height : window.innerHeight;
-                    const viewportTopOffset = vv ? vv.offsetTop : 0;
-                    const topThreshold = getHeaderOffset();
-                    const bottomThreshold = (viewportHeight + viewportTopOffset) - 12; // small bottom padding
-
-                    const isAbove = (rect.top - viewportTopOffset) < topThreshold;
-                    const isBelow = (rect.bottom - viewportTopOffset) > bottomThreshold;
-
-                    if (isBelow) {
-                        el.scrollIntoView({ block: 'center', behavior: prefersReduce ? 'auto' : 'smooth' });
-                    } else if (isAbove) {
-                        const target = window.scrollY + rect.top - topThreshold;
-                        window.scrollTo({ top: target, behavior: prefersReduce ? 'auto' : 'smooth' });
-                    }
-                });
-            }, isIOS ? 360 : 160);
-            return;
-        }
-
-        // Default handling for other inputs
+        // Handle input focus for scrolling
         scheduleScroll();
     };
 
@@ -209,12 +188,7 @@ function setupInputFocusScroll() {
             if (kbNow <= 0) return;
             clearTimeout(vvTimer);
             vvTimer = setTimeout(() => {
-                // For editor, re-run tailored logic; for others, scheduleScroll
-                if (activeEl && activeEl.id === 'editor-area') {
-                    activeEl.scrollIntoView({ block: 'center', behavior: prefersReduce ? 'auto' : 'smooth' });
-                } else {
-                    scheduleScroll();
-                }
+                scheduleScroll();
             }, isIOS ? 150 : 75);
         };
         vv.addEventListener('resize', onVVChange);
@@ -1252,7 +1226,17 @@ function setupMobileMenu() {
 
     // Close when clicking a link in the menu
     menu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (e) => {
+            // Special handling for home link to match desktop behavior
+            if (link.getAttribute('href') === '#home') {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                // Update URL without adding to history
+                history.pushState(null, null, ' ');
+            }
             menu.classList.add('hidden');
             setExpanded(false);
         });

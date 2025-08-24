@@ -26,13 +26,35 @@
         (function() {
             try {
                 const html = document.documentElement;
-                const savedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                let savedTheme = null;
                 
-                // Apply theme immediately
+                // Check if localStorage is accessible
+                const storageAvailable = (() => {
+                    try {
+                        const test = '__storage_test__';
+                        localStorage.setItem(test, test);
+                        localStorage.removeItem(test);
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                })();
+                
+                if (storageAvailable) {
+                    try {
+                        savedTheme = localStorage.getItem('theme');
+                    } catch (e) {
+                        console.log('Could not read theme preference');
+                    }
+                }
+                
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
                     html.classList.add('dark');
                 }
+                
+                // Add a data attribute to indicate theme initialization is complete
+                document.documentElement.setAttribute('data-theme-initialized', 'true');
             } catch (e) {
                 console.log('Could not set initial theme');
             }
