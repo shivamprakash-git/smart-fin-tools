@@ -3,6 +3,9 @@
 @source "../js/**/*.js";
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant hover (&:hover);
+@custom-variant focus (&:focus);
+@custom-variant active (&:active);
 
 @theme {
   --color-primary-50:  #eef2ff;
