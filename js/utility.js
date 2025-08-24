@@ -114,7 +114,7 @@ function initializeTradingViewTicker() {
         "showSymbolLogo": true,
         "locale": "in",
         "largeChartUrl": "",
-        "displayMode": "adaptive"
+        "displayMode": "regular"
     });
 
     container.appendChild(script);
